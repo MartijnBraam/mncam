@@ -1,0 +1,153 @@
+import threading
+
+import mmap
+import numpy as np
+from picamera2.previews import NullPreview
+
+try:
+    # If available, use pure python kms package
+    import kms as pykms
+except ImportError:
+    import pykms
+
+
+class Connector:
+    def __init__(self, name):
+        self.name = name
+        self._resman = None
+        self._conn = None
+        self._crtc = None
+        self.ready = False
+        self._plane = None
+        self._overlay = None
+        self.overlay_fb = None
+        self.width = 0
+        self.height = 0
+        self.overlay_pos = (0, 0, 1, 1)
+
+        self.overlay_dirty = False
+
+    def configure(self, resman, width, height, rate):
+        self._conn = resman.reserve_connector(self.name)
+        self._crtc = resman.reserve_crtc(self._conn)
+        self._resman = resman
+        self.width = width
+        self.height = height
+        self.overlay_pos = (0, 0, width, height)
+
+        if width is not None and height is not None and rate is not None:
+            mode = self._conn.get_default_mode()
+            mode.hdisplay = width
+            mode.vdisplay = height
+            mode.vrefresh = rate
+            self._crtc.set_mode(self._conn, mode)
+
+    def start(self, width, height, pixel_format):
+        fmt = None
+        if pixel_format == "XBGR8888":
+            fmt = pykms.PixelFormat.XBGR8888
+        self._plane = self._resman.reserve_overlay_plane(self._crtc, format=fmt)
+        self._overlay = self._resman.reserve_overlay_plane(self._crtc, format=pykms.PixelFormat.ABGR8888)
+        self._overlay.set_prop("pixel blend mode", 1)
+        self.ready = True
+
+    def position_overlay(self, x, y, w, h):
+        self.overlay_pos = (x, y, w, h)
+        if self.overlay_fb is not None:
+            self.overlay_dirty = True
+
+
+class DRMOutput(NullPreview):
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.card = pykms.Card()
+        self.resman = pykms.ResourceManager(self.card)
+        self.conn = {}
+        self.lock = threading.Lock()
+        self.current = None
+        self.own_current = False
+        self.drmfbs = {}
+
+        super().__init__(width=width, height=height)
+
+    def handle_request(self, picam2):
+        picam2.process_requests(self)
+
+    def use_output(self, name, width=None, height=None, rate=None):
+        c = Connector(name)
+        c.configure(self.resman, width, height, rate)
+        self.conn[name] = c
+        return c
+
+    def render_request(self, completed_request):
+        """Draw the camera image using DRM."""
+        with self.lock:
+            self.render_drm(self.picam2, completed_request)
+            if self.current and self.own_current:
+                self.current.release()
+            self.current = completed_request
+            self.own_current = (completed_request.config['buffer_count'] > 1)
+            if self.own_current:
+                self.current.acquire()
+
+    def render_drm(self, picam2, completed_request):
+        if completed_request is not None:
+            self.display_stream_name = completed_request.config['display']
+            stream = completed_request.stream_map[self.display_stream_name]
+        else:
+            if self.display_stream_name is None:
+                self.display_stream_name = picam2.display_stream_name
+            stream = picam2.stream_map[self.display_stream_name]
+
+        cfg = stream.configuration
+        pixel_format = str(cfg.pixel_format)
+        width, height = (cfg.size.width, cfg.size.height)
+
+        for conn in self.conn:
+            if not self.conn[conn].ready:
+                self.conn[conn].start(width, height, pixel_format)
+
+        ctx = pykms.AtomicReq(self.card)
+        if completed_request is not None:
+            fb = completed_request.request.buffers[stream]
+            fd = fb.planes[0].fd
+            stride = cfg.stride
+            drmfb = pykms.DmabufFramebuffer(self.card, width, height, pykms.PixelFormat.XBGR8888, [fd], [stride], [0])
+            self.drmfbs[fb] = drmfb
+
+            drmfb = self.drmfbs[fb]
+
+            for cname in self.conn:
+                conn = self.conn[cname]
+                ctx.add_plane(conn._plane, drmfb, conn._crtc, (0, 0, width, height), (0, 0, conn.width, conn.height))
+
+        for cname in self.conn:
+            conn = self.conn[cname]
+            if conn.overlay_dirty:
+                width, height = conn.overlay_fb.width, conn.overlay_fb.height
+                ctx.add_plane(conn._overlay, conn.overlay_fb, conn._crtc,
+                              (0, 0, width, height), conn.overlay_pos)
+
+        ctx.commit_sync()
+        ctx = None
+
+    def set_overlay(self, overlay, output=None):
+        if output is None:
+            output = 'DSI-1'
+        conn = self.conn[output]
+        h, w, channels = overlay.shape
+
+        init = False
+        if conn.overlay_fb is None:
+            init = True
+        elif conn.overlay_fb.width != w or conn.overlay_fb.height != h:
+            init = True
+
+        if init:
+            conn.overlay_fb = pykms.DumbFramebuffer(self.card, w, h, "AB24")
+
+        with mmap.mmap(conn.overlay_fb.fd(0), w * h * 4, mmap.MAP_SHARED, mmap.PROT_WRITE) as mm:
+            mm.write(np.ascontiguousarray(overlay).data)
+
+        conn.overlay_dirty = True

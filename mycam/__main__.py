@@ -4,8 +4,8 @@ import time
 from picamera2 import Picamera2
 import numpy as np
 
+from mycam.drmoutput import DRMOutput
 from mycam.edid import check_edid
-from mycam.multipreview import MultiPreview
 from PIL import Image, ImageDraw, ImageFont
 
 cam = Picamera2()
@@ -27,7 +27,9 @@ preview_config = cam.create_preview_configuration({"size": (1920, 1080)}, contro
 
 cam.configure(preview_config)
 
-drm = MultiPreview(rate=60)
+drm = DRMOutput(1920, 1080)
+out_hdmi = drm.use_output("HDMI-A-1", 1920, 1080, 60)
+out_dsi = drm.use_output("DSI-1", 720, 1280)
 
 cam.start_preview(drm)
 cam.start()
@@ -47,6 +49,7 @@ def draw_value(ctx, x, name, value):
     ctx.text((x, 24), str(value), font=font_value, fill=(255, 255, 255, 255), stroke_fill=(0, 0, 0, 255),
              stroke_width=1)
 
+out_hdmi.position_overlay(0, 0, 1920, 64)
 edid = check_edid()
 
 ui = Image.new("RGBA", (1920, 1080), (0, 0, 0, 0))
@@ -58,11 +61,10 @@ cam.set_overlay(np.array(ui))
 hdmi_overlay = Image.new("RGBA", (1920, 64), (0, 0, 0, 0))
 
 while True:
-    time.sleep(0.5)
+    time.sleep(0.01)
 
     edid = check_edid()
 
-    time.sleep(0.5)
     draw = ImageDraw.Draw(hdmi_overlay)
     draw.rectangle((0, 0, 1920, 64), fill=(0, 0, 0, 128))
 
@@ -77,4 +79,3 @@ while True:
 
     drm.set_overlay(np.array(hdmi_overlay), output="HDMI-A-1")
 
-    print(state)
