@@ -46,6 +46,8 @@ class Connector:
         fmt = None
         if pixel_format == "XBGR8888":
             fmt = pykms.PixelFormat.XBGR8888
+        elif pixel_format == "YUV420":
+            fmt = pykms.PixelFormat.YUV420
         self._plane = self._resman.reserve_overlay_plane(self._crtc, format=fmt)
         self._overlay = self._resman.reserve_overlay_plane(self._crtc, format=pykms.PixelFormat.ABGR8888)
         self._overlay.set_prop("pixel blend mode", 1)
@@ -113,7 +115,16 @@ class DRMOutput(NullPreview):
             fb = completed_request.request.buffers[stream]
             fd = fb.planes[0].fd
             stride = cfg.stride
-            drmfb = pykms.DmabufFramebuffer(self.card, width, height, pykms.PixelFormat.XBGR8888, [fd], [stride], [0])
+            if pixel_format == "XBGR8888":
+                drmfb = pykms.DmabufFramebuffer(self.card, width, height, pykms.PixelFormat.XBGR8888, [fd], [stride],
+                                                [0])
+            elif pixel_format == "YUV420":
+                yh = height // 2
+                cs = stride // 2
+                size = height * stride
+                drmfb = pykms.DmabufFramebuffer(self.card, width, height, pykms.PixelFormat.YUV420, [fd, fd, fd],
+                                                [stride, cs, cs], [0, size, size + yh * cs])
+
             self.drmfbs[fb] = drmfb
 
             drmfb = self.drmfbs[fb]

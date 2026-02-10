@@ -1,81 +1,98 @@
 import math
 import time
 
+import libcamera
+from libcamera import ColorSpace
 from picamera2 import Picamera2
+from picamera2.encoders import H264Encoder
+from picamera2.outputs import PyavOutput
 import numpy as np
 
 from mycam.drmoutput import DRMOutput
 from mycam.edid import check_edid
 from PIL import Image, ImageDraw, ImageFont
 
-cam = Picamera2()
 
-for mode in cam.sensor_modes:
-    if mode["size"][1] == 1080:
-        cam_mode = mode
-        break
-else:
-    print("No suitable mode found")
-    exit(1)
+class Camera:
+    def __init__(self):
+        self.cam = Picamera2()
+        self.state = {}
+        self.edid = None
 
-cam.video_configuration = cam.create_video_configuration(raw={
-    "size": cam_mode["size"],
-    "format": cam_mode["format"].format,
-})
+        # Set initial camera mode and controls
+        preview_config = self.cam.create_preview_configuration({"size": (1920, 1080), "format": "YUV420"}, controls={
+            'FrameRate': 30,
+            "NoiseReductionMode": libcamera.controls.draft.NoiseReductionModeEnum.Fast,
+            "Sharpness": 0,
+            "Saturation": 1,
+            "HdrMode": 3,
+        }, colour_space=ColorSpace.Rec709())
+        self.cam.configure(preview_config)
 
-preview_config = cam.create_preview_configuration({"size": (1920, 1080)}, controls={'FrameRate': 60})
+        # Enable DRM output of the camera stream to the HDMI output and the DSI display
+        self.drm = DRMOutput(1920, 1080)
+        self.out_hdmi = self.drm.use_output("HDMI-A-1", 1920, 1080, 60)
+        self.out_dsi = self.drm.use_output("DSI-1", 720, 1280)
 
-cam.configure(preview_config)
+        # Configure the hardware H.264 encoder
+        self.encoder = H264Encoder(10_000_000)
+        self.stream = PyavOutput("rtsp://127.0.0.1:8554/cam", format="rtsp")
+        self.encoder.output = self.stream
 
-drm = DRMOutput(1920, 1080)
-out_hdmi = drm.use_output("HDMI-A-1", 1920, 1080, 60)
-out_dsi = drm.use_output("DSI-1", 720, 1280)
+        # Load fonts for overlays
+        self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
+        self.font_heading = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 15)
+        self.font_value = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
 
-cam.start_preview(drm)
-cam.start()
+        # Image buffers for overlay drawing
+        self.dsi_overlay = Image.new("RGBA", (720, 1280), (0, 0, 0, 0))
+        self.hdmi_overlay = Image.new("RGBA", (1920, 64), (0, 0, 0, 0))
 
-font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
-font_heading = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 15)
-font_value = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
+    def start(self):
+        self.cam.start_preview(self.drm)
+        self.cam.start()
+        self.cam.start_encoder(self.encoder)
 
-state = cam.capture_metadata()
-controls = {"ExposureTime": state["ExposureTime"], "AnalogueGain": state["AnalogueGain"],
-            "ColourGains": state["ColourGains"]}
+        self.out_hdmi.position_overlay(0, 0, 1920, 64)
+
+    def loop(self):
+        self.state = self.cam.capture_metadata()
+        self.edid = check_edid()
+        self.draw_lcd_overlay()
+        time.sleep(0.1)
+        self.draw_hdmi_overlay()
+        time.sleep(1)
+
+    def draw_lcd_overlay(self):
+        draw = ImageDraw.Draw(self.dsi_overlay)
+        draw.rectangle((0, 0, 720, 28), fill=(0, 0, 0, 128))
+        draw.text((13, 10), f"Camera {self.edid.camera_id}", font=self.font, fill=(255, 255, 255, 255))
+        self.drm.set_overlay(np.array(self.dsi_overlay), output="DSI-1")
+
+    def draw_hdmi_overlay(self):
+        draw = ImageDraw.Draw(self.hdmi_overlay)
+        draw.rectangle((0, 0, 1920, 64), fill=(0, 0, 0, 128))
+
+        self.draw_value(draw, 32, "Camera", self.edid.camera_id)
+        gdb = int(10 * math.log10(self.state["AnalogueGain"]))
+        self.draw_value(draw, 150, "Gain", f"{gdb} dB")
+
+        self.draw_value(draw, 300, "Shutter",
+                        int(self.state["ExposureTime"] / float(self.state["FrameDuration"]) * 360))
+        self.draw_value(draw, 450, "Whitebalance", f'{self.state["ColourTemperature"]}k')
+        self.draw_value(draw, 600, "Focus", self.state["FocusFoM"])
+
+        self.drm.set_overlay(np.array(self.hdmi_overlay), output="HDMI-A-1")
+
+    def draw_value(self, ctx, x, name, value):
+        ctx.text((x, 10), name, font=self.font_heading, fill=(255, 255, 255, 255), stroke_fill=(0, 0, 0, 255),
+                 stroke_width=1)
+        ctx.text((x, 24), str(value), font=self.font_value, fill=(255, 255, 255, 255), stroke_fill=(0, 0, 0, 255),
+                 stroke_width=1)
 
 
-def draw_value(ctx, x, name, value):
-    ctx.text((x, 10), name, font=font_heading, fill=(255, 255, 255, 255), stroke_fill=(0, 0, 0, 255),
-             stroke_width=1)
-    ctx.text((x, 24), str(value), font=font_value, fill=(255, 255, 255, 255), stroke_fill=(0, 0, 0, 255),
-             stroke_width=1)
-
-out_hdmi.position_overlay(0, 0, 1920, 64)
-edid = check_edid()
-
-ui = Image.new("RGBA", (1920, 1080), (0, 0, 0, 0))
-draw = ImageDraw.Draw(ui)
-draw.rectangle((0, 0, 720, 28), fill=(0, 0, 0, 128))
-draw.text((13, 10), f"Camera {edid.camera_id}", font=font, fill=(255, 255, 255, 255))
-cam.set_overlay(np.array(ui))
-
-hdmi_overlay = Image.new("RGBA", (1920, 64), (0, 0, 0, 0))
-
-while True:
-    time.sleep(0.01)
-
-    edid = check_edid()
-
-    draw = ImageDraw.Draw(hdmi_overlay)
-    draw.rectangle((0, 0, 1920, 64), fill=(0, 0, 0, 128))
-
-    draw_value(draw, 32, "Camera", edid.camera_id)
-    state = cam.capture_metadata()
-    gdb = int(10 * math.log10(state["AnalogueGain"]))
-    draw_value(draw, 150, "Gain", f"{gdb} dB")
-
-    draw_value(draw, 300, "Shutter", int(state["ExposureTime"] / float(state["FrameDuration"]) * 360))
-    draw_value(draw, 450, "Whitebalance", state["ColourTemperature"])
-    draw_value(draw, 600, "Focus", state["FocusFoM"])
-
-    drm.set_overlay(np.array(hdmi_overlay), output="HDMI-A-1")
-
+if __name__ == '__main__':
+    camera = Camera()
+    camera.start()
+    while True:
+        camera.loop()
