@@ -8,6 +8,7 @@ from picamera2.encoders import H264Encoder
 from picamera2.outputs import PyavOutput
 import numpy as np
 
+from mycam.api import ControlAPI
 from mycam.drmoutput import DRMOutput
 from mycam.edid import check_edid
 from PIL import Image, ImageDraw, ImageFont
@@ -48,6 +49,8 @@ class Camera:
         self.dsi_overlay = Image.new("RGBA", (720, 1280), (0, 0, 0, 0))
         self.hdmi_overlay = Image.new("RGBA", (1920, 64), (0, 0, 0, 0))
 
+        self.api = ControlAPI(self)
+
     def start(self):
         self.cam.start_preview(self.drm)
         self.cam.start()
@@ -55,13 +58,22 @@ class Camera:
 
         self.out_hdmi.position_overlay(0, 0, 1920, 64)
 
+        # Set initial state to keep consistency with the API
+        self.cam.set_controls({"AeEnable": True, "AwbEnable": True})
+
     def loop(self):
         self.state = self.cam.capture_metadata()
+        self.api.update_state(self.cam.capture_metadata())
+        self.api.do_work()
+
         self.edid = check_edid()
         self.draw_lcd_overlay()
         time.sleep(0.1)
         self.draw_hdmi_overlay()
         time.sleep(1)
+
+    def set_controls(self, **kwargs):
+        self.cam.set_controls(kwargs)
 
     def draw_lcd_overlay(self):
         draw = ImageDraw.Draw(self.dsi_overlay)
@@ -94,5 +106,6 @@ class Camera:
 if __name__ == '__main__':
     camera = Camera()
     camera.start()
+
     while True:
         camera.loop()
