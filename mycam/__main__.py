@@ -47,7 +47,7 @@ class Camera:
         # Enable DRM output of the camera stream to the HDMI output and the DSI display
         self.drm = DRMOutput(1920, 1080)
         self.out_hdmi = self.drm.use_output(self.output_hdmi, 1920, 1080, 60, 1)
-        self.out_dsi = self.drm.use_output(self.output_ui, 720, 1280, None, 3)
+        self.out_dsi = self.drm.use_output(self.output_ui, 720, 1280, None, 4)
 
         # Configure the hardware H.264 encoder
         self.encoder = H264Encoder(10_000_000)
@@ -75,7 +75,7 @@ class Camera:
         self.mat_zebra = None
         self.update_idx = 0
 
-        self.thresh_zebra = 232
+        self.thresh_zebra = 230
         self.thresh_under = 18
 
     def start(self):
@@ -119,7 +119,7 @@ class Camera:
         draw = ImageDraw.Draw(self.dsi_overlay)
         draw.rectangle((0, 0, 720, 28), fill=(0, 0, 0, 128))
         draw.text((13, 10), f"Camera {self.edid.camera_id}", font=self.font, fill=(255, 255, 255, 255))
-        self.drm.set_overlay(np.array(self.dsi_overlay), output=self.output_ui, num=2)
+        self.drm.set_overlay(np.array(self.dsi_overlay), output=self.output_ui, num=3)
 
     def draw_hdmi_overlay(self):
         draw = ImageDraw.Draw(self.hdmi_overlay)
@@ -144,18 +144,30 @@ class Camera:
 
     def update_preview(self, request):
         with MappedArray(request, "lores") as mapped:
-            grey = mapped.array[0:self.preview_h]
             if self.update_idx == 0:
+                grey = mapped.array[0:self.preview_h]
                 _, clipping = cv2.threshold(grey, self.thresh_zebra, 255, cv2.THRESH_BINARY)
                 clip_mat = cv2.merge((self.mat_zebra, self.mat_zebra, self.mat_zebra, clipping))
                 self.drm.set_overlay(clip_mat, output=self.output_ui, num=0)
                 self.update_idx = 1
             elif self.update_idx == 1:
+                grey = mapped.array[0:self.preview_h]
                 _, mask = cv2.threshold(grey, self.thresh_under, 255, cv2.THRESH_BINARY)
                 mask_inv = cv2.bitwise_not(mask)
                 mat = cv2.merge((self.mat_black, self.mat_black, self.mat_white, mask_inv))
                 self.drm.set_overlay(mat, output=self.output_ui, num=1)
-                self.update_idx = 0
+                self.update_idx = 2
+            elif self.update_idx == 2 or self.update_idx == 3:
+                if self.update_idx == 2:
+                    grey = mapped.array[0:self.preview_h]
+                    self.gradient = cv2.Sobel(grey, cv2.CV_32F, 1, 1, ksize=3)
+                    self.update_idx = 3
+                else:
+                    gradient_8bit = np.uint8(self.gradient)
+                    _, edges = cv2.threshold(gradient_8bit, 20, 255, cv2.THRESH_BINARY)
+                    mat = cv2.merge((self.mat_white, self.mat_black, self.mat_black, edges))
+                    self.drm.set_overlay(mat, output=self.output_ui, num=2)
+                    self.update_idx = 0
 
 
 if __name__ == '__main__':
