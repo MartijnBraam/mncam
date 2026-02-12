@@ -88,7 +88,7 @@ class Camera:
         self.ui = UI(self.ui_size[0], self.ui_size[1])
 
         def on_paint(buf):
-            self.drm.set_overlay(buf, output=self.output_ui, num=3)
+            self.drm.set_overlay(buf, output=self.output_ui, num=self.OVERLAY_UI)
 
         self.ui.paint_hook = on_paint
         self.debounce = 0
@@ -182,7 +182,7 @@ class Camera:
                 grey = mapped.array[0:self.preview_h]
                 _, clipping = cv2.threshold(grey, self.thresh_zebra, 255, cv2.THRESH_BINARY)
                 clip_mat = cv2.merge((self.mat_zebra, self.mat_zebra, self.mat_zebra, clipping))
-                self.drm.set_overlay(clip_mat, output=self.output_ui, num=0)
+                self.drm.set_overlay(clip_mat, output=self.output_ui, num=self.OVERLAY_ZEBRA)
                 self.last_update[task] = 0
             elif task == 'false':
                 self.last_update[task] = 0
@@ -195,7 +195,7 @@ class Camera:
                     gradient_8bit = np.uint8(self.gradient)
                     _, edges = cv2.threshold(gradient_8bit, 20, 255, cv2.THRESH_BINARY)
                     mat = cv2.merge((self.mat_white, self.mat_black, self.mat_black, edges))
-                    self.drm.set_overlay(mat, output=self.output_ui, num=2)
+                    self.drm.set_overlay(mat, output=self.output_ui, num=self.OVERLAY_FOCUS)
                     self.update_idx = 0
                     self.last_update[task] = 0
 
