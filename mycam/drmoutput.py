@@ -59,10 +59,14 @@ class Connector:
             self.overlay_dirty[i] = False
         self.ready = True
 
-    def position_overlay(self, idx, x, y, w, h):
+    def overlay_position(self, idx, x, y, w, h):
         self.overlay_pos[idx] = (x, y, w, h)
         if idx in self.overlay_fb and self.overlay_fb[idx] is not None:
             self.overlay_dirty[idx] = True
+
+    def overlay_opacity(self, idx, opacity):
+        val = int(float(0xFFFF) * opacity)
+        self.overlay[idx].set_prop("alpha", val)
 
 
 class DRMOutput(NullPreview):

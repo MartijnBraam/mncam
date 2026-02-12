@@ -83,7 +83,7 @@ class Camera:
         self.cam.start()
         self.cam.start_encoder(self.encoder)
 
-        self.out_hdmi.position_overlay(0, 0, 0, 1920, 64)
+        self.out_hdmi.overlay_position(0, 0, 0, 1920, 64)
 
         # Set initial state to keep consistency with the API
         self.cam.set_controls({"AeEnable": True, "AwbEnable": True})
