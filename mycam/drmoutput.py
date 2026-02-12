@@ -19,21 +19,24 @@ class Connector:
         self._crtc = None
         self.ready = False
         self._plane = None
-        self._overlay = None
-        self.overlay_fb = None
+        self.num_overlays = 0
+        self.overlay = []
+        self.overlay_fb = {}
         self.width = 0
         self.height = 0
-        self.overlay_pos = (0, 0, 1, 1)
+        self.overlay_pos = []
 
-        self.overlay_dirty = False
+        self.overlay_dirty = {}
 
-    def configure(self, resman, width, height, rate):
+    def configure(self, resman, width, height, rate, layers):
+        self.num_overlays = layers
         self._conn = resman.reserve_connector(self.name)
         self._crtc = resman.reserve_crtc(self._conn)
         self._resman = resman
         self.width = width
         self.height = height
-        self.overlay_pos = (0, 0, width, height)
+        for i in range(layers):
+            self.overlay_pos.append((0, 0, width, height))
 
         if width is not None and height is not None and rate is not None:
             mode = self._conn.get_default_mode()
@@ -49,14 +52,17 @@ class Connector:
         elif pixel_format == "YUV420":
             fmt = pykms.PixelFormat.YUV420
         self._plane = self._resman.reserve_overlay_plane(self._crtc, format=fmt)
-        self._overlay = self._resman.reserve_overlay_plane(self._crtc, format=pykms.PixelFormat.ABGR8888)
-        self._overlay.set_prop("pixel blend mode", 1)
+        for i in range(0, self.num_overlays):
+            layer = self._resman.reserve_overlay_plane(self._crtc, format=pykms.PixelFormat.ABGR8888)
+            layer.set_prop("pixel blend mode", 1)
+            self.overlay.append(layer)
+            self.overlay_dirty[i] = False
         self.ready = True
 
-    def position_overlay(self, x, y, w, h):
-        self.overlay_pos = (x, y, w, h)
-        if self.overlay_fb is not None:
-            self.overlay_dirty = True
+    def position_overlay(self, idx, x, y, w, h):
+        self.overlay_pos[idx] = (x, y, w, h)
+        if idx in self.overlay_fb and self.overlay_fb[idx] is not None:
+            self.overlay_dirty[idx] = True
 
 
 class DRMOutput(NullPreview):
@@ -76,9 +82,9 @@ class DRMOutput(NullPreview):
     def handle_request(self, picam2):
         picam2.process_requests(self)
 
-    def use_output(self, name, width=None, height=None, rate=None):
+    def use_output(self, name, width=None, height=None, rate=None, overlays=0):
         c = Connector(name)
-        c.configure(self.resman, width, height, rate)
+        c.configure(self.resman, width, height, rate, overlays)
         self.conn[name] = c
         return c
 
@@ -135,30 +141,31 @@ class DRMOutput(NullPreview):
 
         for cname in self.conn:
             conn = self.conn[cname]
-            if conn.overlay_dirty:
-                width, height = conn.overlay_fb.width, conn.overlay_fb.height
-                ctx.add_plane(conn._overlay, conn.overlay_fb, conn._crtc,
-                              (0, 0, width, height), conn.overlay_pos)
+            for i in range(conn.num_overlays):
+                if conn.overlay_dirty[i]:
+                    width, height = conn.overlay_fb[i].width, conn.overlay_fb[i].height
+                    ctx.add_plane(conn.overlay[i], conn.overlay_fb[i], conn._crtc,
+                                  (0, 0, width, height), conn.overlay_pos[i])
 
         ctx.commit_sync()
         ctx = None
 
-    def set_overlay(self, overlay, output=None):
+    def set_overlay(self, overlay, output=None, num=0):
         if output is None:
             output = 'DSI-1'
         conn = self.conn[output]
         h, w, channels = overlay.shape
 
         init = False
-        if conn.overlay_fb is None:
+        if num not in conn.overlay_fb or conn.overlay_fb[num] is None:
             init = True
-        elif conn.overlay_fb.width != w or conn.overlay_fb.height != h:
+        elif conn.overlay_fb[num].width != w or conn.overlay_fb[num].height != h:
             init = True
 
         if init:
-            conn.overlay_fb = pykms.DumbFramebuffer(self.card, w, h, "AB24")
+            conn.overlay_fb[num] = pykms.DumbFramebuffer(self.card, w, h, "AB24")
 
-        with mmap.mmap(conn.overlay_fb.fd(0), w * h * 4, mmap.MAP_SHARED, mmap.PROT_WRITE) as mm:
+        with mmap.mmap(conn.overlay_fb[num].fd(0), w * h * 4, mmap.MAP_SHARED, mmap.PROT_WRITE) as mm:
             mm.write(np.ascontiguousarray(overlay).data)
 
-        conn.overlay_dirty = True
+        conn.overlay_dirty[num] = True
