@@ -27,6 +27,8 @@ class Connector:
         self.height = 0
         self.overlay_pos = []
 
+        self.zoom = 1.0
+
         self.overlay_dirty = {}
 
     def configure(self, resman, width, height, rate, layers):
@@ -143,7 +145,16 @@ class DRMOutput(NullPreview):
 
             for cname in self.conn:
                 conn = self.conn[cname]
-                ctx.add_plane(conn._plane, drmfb, conn._crtc, (0, 0, width, height), (0, 0, conn.width, conn.height))
+                src_x = 0
+                src_y = 0
+                src_w = width
+                src_h = height
+                if conn.zoom > 1.0:
+                    src_w = int(width / conn.zoom)
+                    src_h = int(height / conn.zoom)
+                    src_x = int(width - src_w) // 2
+                    src_y = int(height - src_h) // 2
+                ctx.add_plane(conn._plane, drmfb, conn._crtc, (src_x, src_y, src_w, src_h), (0, 0, conn.width, conn.height))
 
         for cname in self.conn:
             conn = self.conn[cname]

@@ -1,4 +1,5 @@
 import threading
+import time
 
 import evdev
 from PIL import ImageFont, Image, ImageDraw
@@ -35,6 +36,12 @@ class TapEvent:
         self.y = y
 
 
+class DoubleTapEvent:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class Widget:
     def __init__(self):
         self.x = 0
@@ -51,6 +58,9 @@ class Widget:
         pass
 
     def tap(self):
+        pass
+
+    def doubletap(self):
         pass
 
 
@@ -142,6 +152,7 @@ class Layout:
         self.width = width
         self.height = height
         self.buf = Image.new("RGBA", (self.width, self.height), (0, 0, 0, 0))
+        self.on_double_tap_empty = None
 
         self.widgets = {}
         for i in range(6):
@@ -208,6 +219,17 @@ class Layout:
                     w.tap()
                     break
 
+    def doubletap(self, x, y):
+        for attachment in range(6):
+            for w in self.widgets[attachment]:
+                if w.x <= x <= w.x2 and w.y <= y <= w.y2:
+                    w.doubletap()
+                    break
+        else:
+            # Double tap outside a widget, used for zooming
+            if self.on_double_tap_empty is not None:
+                self.on_double_tap_empty()
+
 
 def _touch_transform(config, x, y):
     flip_x = False
@@ -232,6 +254,7 @@ def _input_thread(path, queue, config):
     device = evdev.InputDevice(path)
     last_x = 0
     last_y = 0
+    last_t = time.monotonic()
     for event in device.read_loop():
         # print(evdev.categorize(event))
         if event.type == evdev.ecodes.EV_ABS:
@@ -243,7 +266,12 @@ def _input_thread(path, queue, config):
             if event.value == 1:
                 # Touch down
                 pos = _touch_transform(config, last_x, last_y)
-                queue.put(TapEvent(pos[0], pos[1]))
+                time_since_last = time.monotonic() - last_t
+                if time_since_last < 0.5:
+                    queue.put(DoubleTapEvent(pos[0], pos[1]))
+                else:
+                    queue.put(TapEvent(pos[0], pos[1]))
+                last_t = time.monotonic()
             else:
                 # Touch up
                 pass

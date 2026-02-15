@@ -2,7 +2,7 @@ import datetime
 import math
 import queue
 
-from mycam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs
+from mycam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent
 
 
 class UI:
@@ -23,6 +23,7 @@ class UI:
         self.gain = StateNumber()
         self.tc = StateNumber()
         self.camera_id = StateNumber()
+        self.zoom = StateNumber(1.0)
 
         self.zebra = StateNumber(False)
         self.focus_assist = StateNumber(False)
@@ -49,6 +50,8 @@ class UI:
         l.add_button(Layout.BOTTOMLEFT, 130, "Exp.", self.false_color, lambda v: self.cam.enable_false_color(v))
         l.add_widget(Layout.BOTTOMLEFT, GuidesButton(130, "Guides", self.guides, lambda v: self.cycle_guides()))
 
+        l.on_double_tap_empty = lambda : self.cam.enable_focus_zoom(self.zoom.value == 1.0)
+
         l.compute()
 
     def cycle_guides(self):
@@ -65,7 +68,10 @@ class UI:
 
         while not self.input_queue.empty():
             event = self.input_queue.get()
-            self.screens[self.active_screen].tap(event.x, event.y)
+            if isinstance(event, TapEvent):
+                self.screens[self.active_screen].tap(event.x, event.y)
+            elif isinstance(event, DoubleTapEvent):
+                self.screens[self.active_screen].doubletap(event.x, event.y)
 
         tc = datetime.datetime.fromtimestamp(self.state["SensorTimestamp"] / 1000000000, tz=datetime.timezone.utc)
         self.tc.set(tc.strftime("%H:%M:%S"))

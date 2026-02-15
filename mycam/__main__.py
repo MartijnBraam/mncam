@@ -2,9 +2,8 @@ import math
 import time
 import cv2
 
-import libcamera
 from libcamera import ColorSpace
-from picamera2 import Picamera2, Preview, MappedArray
+from picamera2 import Picamera2, MappedArray
 from picamera2.encoders import H264Encoder
 from picamera2.outputs import PyavOutput
 import numpy as np
@@ -176,6 +175,13 @@ class Camera:
         self.ui.focus_assist.set(enable)
         self.out_dsi.overlay_opacity(self.OVERLAY_FOCUS, 1.0 if enable else 0.0)
 
+    def enable_focus_zoom(self, enable):
+        # The default 1280x800 monitor is at 0.66x scale, with 1.5x zoom it would archieve 1:1 pixel mapping
+        # so this zooms to 3x to have 2:1 pixel mapping on the default zoom level
+        one_to_one = 1920 / self.out_dsi.width
+        self.out_dsi.zoom = one_to_one * 2 if enable else 1.0
+        self.ui.zoom.set(self.out_dsi.zoom)
+
     def update_preview(self, request):
         ordering = []
         toggles = {
@@ -201,7 +207,8 @@ class Camera:
                 self.last_update[task] = 0
             elif task == 'false':
                 grey = mapped.array[0:self.preview_h]
-                middle_grey = cv2.inRange(grey, self.config.monitor.exposure_helper_min, self.config.monitor.exposure_helper_max)
+                middle_grey = cv2.inRange(grey, self.config.monitor.exposure_helper_min,
+                                          self.config.monitor.exposure_helper_max)
                 middle_mat = cv2.merge((self.mat_black, self.mat_white, self.mat_black, middle_grey))
                 self.drm.set_overlay(middle_mat, output=self.output_ui, num=self.OVERLAY_FALSE)
                 self.last_update[task] = 0
