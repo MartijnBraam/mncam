@@ -25,10 +25,16 @@ class OutputConfig:
 class EncoderConfig:
     def __init__(self):
         self.bitrate = "10M"
+        self.enabled = True
 
     @property
     def bitrate_int(self):
         return humanfriendly.parse_size(self.bitrate)
+
+
+class SensorConfig:
+    def __init__(self):
+        self.framerate = 30
 
 
 class Config:
@@ -38,6 +44,7 @@ class Config:
         self.monitor = MonitorConfig()
         self.output = OutputConfig()
         self.encoder = EncoderConfig()
+        self.sensor = SensorConfig()
 
         self.load_defaults()
         if os.path.isfile(path):
@@ -78,8 +85,12 @@ class Config:
                                 new = tuple(int(new[i:i + 2], 16) for i in (0, 2, 4))
                         setattr(ob, attr, new)
 
+        if self.encoder.enabled:
+            # The framerate cannot be above 30 when the hardware video encoder is used
+            self.sensor.framerate = min(30, self.sensor.framerate)
+
     def save_config(self):
-        sections = ["output", "monitor", "encoder"]
+        sections = ["sensor", "output", "monitor", "encoder"]
         parser = configparser.ConfigParser()
         for section in sections:
             parser.add_section(section)

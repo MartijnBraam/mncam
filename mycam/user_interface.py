@@ -18,7 +18,7 @@ class UI:
         self.paint_hook = None
         self.state = None
 
-        self.fps = StateNumber(30)
+        self.fps = StateNumber(self.config.sensor.framerate)
         self.shutter = StateNumber()
         self.gain = StateNumber()
         self.tc = StateNumber()

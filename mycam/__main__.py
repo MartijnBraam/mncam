@@ -47,7 +47,7 @@ class Camera:
                 "format": "YUV420"
             },
             controls={
-                'FrameRate': 30,
+                'FrameRate': self.config.sensor.framerate,
                 "NoiseReductionMode": libcamera.controls.draft.NoiseReductionModeEnum.Fast,
                 "Sharpness": 0,
                 "Saturation": 1,
@@ -62,9 +62,10 @@ class Camera:
         self.out_dsi = self.drm.use_output(self.output_ui, self.ui_size[0], self.ui_size[1], None, 4)
 
         # Configure the hardware H.264 encoder
-        self.encoder = H264Encoder(self.config.encoder.bitrate_int)
-        self.stream = PyavOutput("rtsp://127.0.0.1:8554/cam", format="rtsp")
-        self.encoder.output = self.stream
+        if self.config.encoder.enabled:
+            self.encoder = H264Encoder(self.config.encoder.bitrate_int)
+            self.stream = PyavOutput("rtsp://127.0.0.1:8554/cam", format="rtsp")
+            self.encoder.output = self.stream
 
         def preview(request):
             self.update_preview(request)
@@ -105,7 +106,8 @@ class Camera:
     def start(self):
         self.cam.start_preview(self.drm)
         self.cam.start()
-        self.cam.start_encoder(self.encoder)
+        if self.config.encoder.enabled:
+            self.cam.start_encoder(self.encoder)
 
         self.out_hdmi.overlay_position(0, 0, 0, self.config.output.mode[0], 64)
 
