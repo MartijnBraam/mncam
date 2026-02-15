@@ -20,11 +20,11 @@ class UI:
         self.state = None
 
         # Fixed info
+        self.min_shutter = self.config.sensor.framerate
+        self.max_shutter = self.config.sensor.framerate * 10
+
         ctrl_min, ctrl_max, ctrl_default = limits["AnalogueGain"]
         self.max_gain = ctrl_max
-        ctrl_min, ctrl_max, ctrl_default = limits["ExposureTime"]
-        self.min_shutter = ctrl_min
-        self.max_shutter = ctrl_max
         ctrl_min, ctrl_max, ctrl_default = limits["ExposureValue"]
         self.min_ec = ctrl_min
         self.max_ec = ctrl_max
@@ -84,7 +84,9 @@ class UI:
 
         # Shutter control panel
         shutter_panel = VBox(name="shutter")
-        shutter_panel.add(Slider("Shutter", self.shutter, None, background=(0, 0, 0, 80)))
+        shutter_panel.add(
+            Slider("Shutter", self.shutter, handler=lambda v: self.cam.set_shutter(v), min=self.min_shutter,
+                   max=self.max_shutter, background=(0, 0, 0, 80)))
         shutter_panel.compute()
         l.add_widget(Layout.MIDDLE, shutter_panel)
 

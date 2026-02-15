@@ -195,6 +195,13 @@ class Camera:
         self.ui.gain.set(gain)
         self.cam.set_controls({"AnalogueGain": gain})
 
+    def set_shutter(self, shutter):
+        self.enable_auto_exposure(False)
+        self.ui.shutter.set(shutter)
+        et = int(1 / shutter * 1000000)
+        print("Setting exposure", et)
+        self.cam.set_controls({"ExposureTime": et})
+
     def update_preview(self, request):
         ordering = []
         toggles = {
