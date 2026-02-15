@@ -23,6 +23,8 @@ sensors = [
     Sensor("OneInchEye", "imx283", '1"', 5496, 3672, 2.4, 2),
     Sensor("StarlightEye", "imx585", '1/1.2"', 3840, 2160, 2.9, 2),
     Sensor("FourThirdsEye", "imx294", '4/3"', 4168, 2824, 4.63, 2),
+    None,
+    Sensor("Starlight", "imx327", '1/2.8"', 1920, 1080, 2.9, 1),
 ]
 
 
