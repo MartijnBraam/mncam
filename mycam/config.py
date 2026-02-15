@@ -2,6 +2,7 @@ import os.path
 import configparser
 
 import humanfriendly
+import libcamera
 
 
 class MonitorConfig:
@@ -36,6 +37,20 @@ class EncoderConfig:
 class SensorConfig:
     def __init__(self):
         self.framerate = 30
+        self.exposure_compensation = 0.0
+        self.sharpness = 1.0
+        self.saturation = 1.0
+        self.contrast = 1.0
+        self.noise_reduction = "fast"
+
+    @property
+    def noise_reduction_constant(self):
+        if self.noise_reduction == "fast":
+            return libcamera.controls.draft.NoiseReductionModeEnum.Fast
+        elif self.noise_reduction == "highquality":
+            return libcamera.controls.draft.NoiseReductionModeEnum.HighQuality
+        else:
+            return libcamera.controls.draft.NoiseReductionModeEnum.Off
 
 
 class Config:
