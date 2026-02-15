@@ -199,7 +199,6 @@ class Camera:
         self.enable_auto_exposure(False)
         self.ui.shutter.set(shutter)
         et = int(1 / shutter * 1000000)
-        print("Setting exposure", et)
         self.cam.set_controls({"ExposureTime": et})
 
     def update_preview(self, request):

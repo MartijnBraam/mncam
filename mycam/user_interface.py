@@ -3,7 +3,7 @@ import math
 import queue
 
 from mycam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent, VBox, Slider, \
-    ToggleRow
+    ToggleRow, Guides
 
 
 class UI:
@@ -80,7 +80,10 @@ class UI:
 
         l.page_state = self.tab_state
         # Empty panel which shows the guides when needed
-        l.add_widget(Layout.MIDDLE, VBox(name=""))
+        empty = VBox(name="")
+        empty.add(Guides(self.guides))
+        l.add_widget(Layout.MIDDLE, empty)
+        empty.compute()
 
         # Shutter control panel
         shutter_panel = VBox(name="shutter")

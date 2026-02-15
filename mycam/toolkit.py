@@ -134,18 +134,27 @@ class GuidesButton(Button):
             self.text = self.state.value.title()
         else:
             self.text = "Guides"
-        once = super().render(ctx)
+        super().render(ctx)
 
-        if once:
-            width = self.layout_width
-            height = self.layout_height
-            if self.state.value == "thirds":
-                ctx.line((width / 3, 64, width / 3, height - 65), (128, 128, 128, 128))
-                ctx.line((width / 3 * 2, 64, width / 3 * 2, height - 65), (128, 128, 128, 128))
-                ctx.line((0, height / 3, width, height / 3), (128, 128, 128, 128))
-                ctx.line((0, height / 3 * 2, width, height / 3 * 2), (128, 128, 128, 128))
-            else:
-                ctx.rectangle((0, 64, width, height - 65), (0, 0, 0, 0))
+
+class Guides(Widget):
+    def __init__(self, state):
+        super().__init__()
+        self.state = state
+        self.hexpand = True
+
+    def render(self, ctx):
+        if not self.state.once(self) and not self._dirty.once():
+            return
+        width = self.layout_width
+        height = self.layout_height
+        if self.state.value == "thirds":
+            ctx.line((width / 3, 64, width / 3, height - 65), (128, 128, 128, 128))
+            ctx.line((width / 3 * 2, 64, width / 3 * 2, height - 65), (128, 128, 128, 128))
+            ctx.line((0, height / 3, width, height / 3), (128, 128, 128, 128))
+            ctx.line((0, height / 3 * 2, width, height / 3 * 2), (128, 128, 128, 128))
+        else:
+            ctx.rectangle((0, 64, width, height - 65), (0, 0, 0, 0))
 
 
 class Label(Button):
