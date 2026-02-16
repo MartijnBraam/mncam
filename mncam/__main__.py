@@ -7,12 +7,12 @@ from picamera2.encoders import H264Encoder
 from picamera2.outputs import PyavOutput
 import numpy as np
 
-from mycam.api import ControlAPI
-from mycam.config import Config
-from mycam.drmoutput import DRMOutput
-from mycam.edid import check_edid
+from mncam.api import ControlAPI
+from mncam.config import Config
+from mncam.drmoutput import DRMOutput
+from mncam.edid import check_edid
 
-from mycam.user_interface import UI
+from mncam.user_interface import UI
 
 
 class Camera:

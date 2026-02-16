@@ -3,7 +3,7 @@ Description=Camera
 
 [Service]
 WorkingDirectory=/opt/picam
-ExecStart=/usr/bin/python3 -m mycam
+ExecStart=/usr/bin/python3 -m mncam
 
 [Install]
 WantedBy=multi-user.target

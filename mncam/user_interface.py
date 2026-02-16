@@ -2,7 +2,7 @@ import datetime
 import math
 import queue
 
-from mycam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent, VBox, Slider, \
+from mncam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent, VBox, Slider, \
     ToggleRow, Guides, RadioRow
 
 
@@ -126,8 +126,9 @@ class UI:
 
         # Gain control panel
         gain_panel = VBox(name="gain")
-        gain_panel.add(Slider("Gain", self.gain, min=StateNumber(1.0), max=self.max_gain, handler=lambda v: self.cam.set_gain(v),
-                              background=(0, 0, 0, 80)))
+        gain_panel.add(
+            Slider("Gain", self.gain, min=StateNumber(1.0), max=self.max_gain, handler=lambda v: self.cam.set_gain(v),
+                   background=(0, 0, 0, 80)))
         gain_panel.compute()
         l.add_widget(Layout.MIDDLE, gain_panel)
 
