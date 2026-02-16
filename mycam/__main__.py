@@ -1,4 +1,3 @@
-import math
 import time
 import cv2
 
@@ -12,7 +11,6 @@ from mycam.api import ControlAPI
 from mycam.config import Config
 from mycam.drmoutput import DRMOutput
 from mycam.edid import check_edid
-from PIL import Image, ImageDraw, ImageFont
 
 from mycam.user_interface import UI
 
@@ -71,15 +69,6 @@ class Camera:
             self.update_preview(request)
 
         self.cam.pre_callback = preview
-
-        # Load fonts for overlays
-        self.font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 15)
-        self.font_heading = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 15)
-        self.font_value = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 30)
-
-        # Image buffers for overlay drawing
-        self.hdmi_overlay = Image.new("RGBA", (self.config.output.mode[0], 64), (0, 0, 0, 0))
-
         self.api = ControlAPI(self)
 
         self.mat_black = None
@@ -91,11 +80,18 @@ class Camera:
         self.thresh_under = 18
 
         self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls)
+        self.ui_hdmi = UI(1920, 64, self, self.config, self.cam.camera_controls, hdmi=True)
 
         def on_paint(buf):
             self.drm.set_overlay(buf, output=self.output_ui, num=self.OVERLAY_UI)
 
         self.ui.paint_hook = on_paint
+
+        def on_hdmi_paint(buf):
+            self.drm.set_overlay(buf, output=self.output_hdmi, num=0)
+
+        self.ui_hdmi.paint_hook = on_hdmi_paint
+
         self.debounce = 0
         self.last_update = {
             "zebra": 0,
@@ -109,7 +105,9 @@ class Camera:
         if self.config.encoder.enabled:
             self.cam.start_encoder(self.encoder)
 
+        time.sleep(1)
         self.out_hdmi.overlay_position(0, 0, 0, self.config.output.mode[0], 64)
+        self.out_hdmi.overlay_opacity(0, 0.0)
 
         # Set initial state to keep consistency with the API
         self.cam.set_controls({"AeEnable": True, "AwbEnable": True})
@@ -132,36 +130,18 @@ class Camera:
         self.api.update_state(self.cam.capture_metadata())
         self.api.do_work()
         self.ui.update_state(self.cam.capture_metadata())
+        self.ui_hdmi.update_state(self.cam.capture_metadata())
+
         if self.debounce > 10:
             self.debounce = 0
             self.edid = check_edid()
             self.ui.camera_id.set(self.edid.camera_id)
+            self.ui_hdmi.camera_id.set(self.edid.camera_id)
         self.debounce += 1
         time.sleep(0.1)
 
     def set_controls(self, **kwargs):
         self.cam.set_controls(kwargs)
-
-    def draw_hdmi_overlay(self):
-        draw = ImageDraw.Draw(self.hdmi_overlay)
-        draw.rectangle((0, 0, 1920, 64), fill=(0, 0, 0, 128))
-
-        self.draw_value(draw, 32, "Camera", self.edid.camera_id)
-        gdb = int(10 * math.log10(self.state["AnalogueGain"]))
-        self.draw_value(draw, 150, "Gain", f"{gdb} dB")
-
-        self.draw_value(draw, 300, "Shutter",
-                        int(self.state["ExposureTime"] / float(self.state["FrameDuration"]) * 360))
-        self.draw_value(draw, 450, "Whitebalance", f'{self.state["ColourTemperature"]}k')
-        self.draw_value(draw, 600, "Focus", self.state["FocusFoM"])
-
-        self.drm.set_overlay(np.array(self.hdmi_overlay), output=self.output_hdmi)
-
-    def draw_value(self, ctx, x, name, value):
-        ctx.text((x, 10), name, font=self.font_heading, fill=(255, 255, 255, 255), stroke_fill=(0, 0, 0, 255),
-                 stroke_width=1)
-        ctx.text((x, 24), str(value), font=self.font_value, fill=(255, 255, 255, 255), stroke_fill=(0, 0, 0, 255),
-                 stroke_width=1)
 
     def enable_zebra(self, enable):
         self.ui.zebra.set(enable)
@@ -174,6 +154,10 @@ class Camera:
     def enable_focus_assist(self, enable):
         self.ui.focus_assist.set(enable)
         self.out_dsi.overlay_opacity(self.OVERLAY_FOCUS, 1.0 if enable else 0.0)
+
+    def enable_hdmi_overlay(self, enable):
+        self.ui.hdmi_overlay.set(enable)
+        self.out_hdmi.overlay_opacity(0, 1.0 if enable else 0.0)
 
     def enable_focus_zoom(self, enable):
         # The default 1280x800 monitor is at 0.66x scale, with 1.5x zoom it would archieve 1:1 pixel mapping

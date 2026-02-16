@@ -7,11 +7,12 @@ from mycam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEv
 
 
 class UI:
-    def __init__(self, width, height, camera, config, limits):
+    def __init__(self, width, height, camera, config, limits, hdmi=False):
         self.width = width
         self.height = height
         self.cam = camera
         self.config = config
+        self.hdmi = hdmi
 
         self.screens = {}
         self.create_screen("main")
@@ -45,14 +46,42 @@ class UI:
         self.guides = StateNumber("thirds")
         self.zoom = StateNumber(1.0)
 
+        # HDMI overlay state
+        self.hdmi_overlay = StateNumber(False)
+
         # UI state
         self.tab_state = StateNumber("")
 
         self.input_queue = queue.Queue()
-        self._create_main_layout()
+        if self.hdmi:
+            self._create_hdmi_layout()
+        else:
+            self._create_main_layout()
 
     def start(self):
+        if self.hdmi:
+            return
         HandleInputs(self.input_queue, self.config)
+
+    def _create_hdmi_layout(self):
+        l: Layout = self.screens["main"]
+        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.ec, align="left", name="ae",
+                    handler=lambda v: self.tab_state.toggle("ae"),
+                    button_state=self.tab_state, state_cmp=lambda s: s == "ae")
+
+        l.add_label(Layout.TOPLEFT, 80, "FPS", "{}", self.fps, align="left",
+                    handler=lambda v: self.tab_state.toggle("fps"),
+                    button_state=self.tab_state, state_cmp=lambda s: s == "fps")
+        l.add_label(Layout.TOPLEFT, 100, "Shutter", "1/{}", self.shutter, align="left", name="shutter",
+                    handler=lambda v: self.tab_state.toggle("shutter"),
+                    button_state=self.tab_state, state_cmp=lambda s: s == "shutter")
+        l.add_label(Layout.TOPLEFT, 100, "Gain", "{} dB", self.gain, align="left", name="gain",
+                    handler=lambda v: self.tab_state.toggle("gain"),
+                    button_state=self.tab_state, state_cmp=lambda s: s == "gain")
+        l.add_label(Layout.TOPMIDDLE, 200, "Timecode", "{}", self.tc, None, "middle")
+        l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
+
+        l.compute()
 
     def _create_main_layout(self):
         l: Layout = self.screens["main"]
@@ -77,6 +106,8 @@ class UI:
         l.add_button(Layout.BOTTOMLEFT, 130, "Focus", self.focus_assist, lambda v: self.cam.enable_focus_assist(v))
         l.add_button(Layout.BOTTOMLEFT, 130, "Exp.", self.false_color, lambda v: self.cam.enable_false_color(v))
         l.add_widget(Layout.BOTTOMLEFT, GuidesButton(130, "Guides", self.guides, lambda v: self.cycle_guides()))
+        l.add_button(Layout.BOTTOMRIGHT, 180, "HDMI overlay", self.hdmi_overlay,
+                     lambda v: self.cam.enable_hdmi_overlay(v))
 
         l.page_state = self.tab_state
         # Empty panel which shows the guides when needed
@@ -126,12 +157,13 @@ class UI:
     def update_state(self, state):
         self.state = state
 
-        while not self.input_queue.empty():
-            event = self.input_queue.get()
-            if isinstance(event, TapEvent):
-                self.screens[self.active_screen].tap(event.x, event.y)
-            elif isinstance(event, DoubleTapEvent):
-                self.screens[self.active_screen].doubletap(event.x, event.y)
+        if not self.hdmi:
+            while not self.input_queue.empty():
+                event = self.input_queue.get()
+                if isinstance(event, TapEvent):
+                    self.screens[self.active_screen].tap(event.x, event.y)
+                elif isinstance(event, DoubleTapEvent):
+                    self.screens[self.active_screen].doubletap(event.x, event.y)
 
         tc = datetime.datetime.fromtimestamp(self.state["SensorTimestamp"] / 1000000000, tz=datetime.timezone.utc)
         self.tc.set(tc.strftime("%H:%M:%S"))
