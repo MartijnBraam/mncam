@@ -12,18 +12,7 @@ latency camera feed going from the sensor to HDMI while showing an configuration
 
 ## Installation
 
-The easiest way to install it is by installing Raspian Trixie to an SD card, make sure no graphical user interface
-is starting by either uninstalling it or disabling all related systemd services. Then put the picam application
-in place:
-
-```shell-session
-$ apt install python3-opencv python3-evdev python3-picamera2 python3-pillow haproxy
-$ cd /opt
-$ git clone https://github.com/martijnbraam/picam
-$ cp /opt/picam/system/camera.service /etc/systemd/system/camera.service
-$ cp /opt/picam/system/haproxy.cfg /etc/haproxy/haproxy.cfg
-$ systemctl start camera
-```
+Use the `install.sh` script to install mncam on a minimal raspbian trixie installation.
 
 ## Configuration
 
