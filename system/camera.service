@@ -1,5 +1,6 @@
 [Unit]
 Description=Camera
+After=mediamtx.service
 
 [Service]
 WorkingDirectory=/opt/picam

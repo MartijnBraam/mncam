@@ -1,6 +1,6 @@
 module mncam
 
-go 1.25
+go 1.24
 
 require (
 	github.com/gorilla/handlers v1.5.2

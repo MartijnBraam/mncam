@@ -1,0 +1,10 @@
+[Unit]
+Description=Camera API server
+Requires=camera.service haproxy.service mediamtx.service
+After=camera.service
+
+[Service]
+ExecStart=/opt/picam/mncam_api
+
+[Install]
+WantedBy=multi-user.target

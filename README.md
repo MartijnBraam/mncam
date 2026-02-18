@@ -17,10 +17,11 @@ is starting by either uninstalling it or disabling all related systemd services.
 in place:
 
 ```shell-session
-$ apt install python3-opencv python3-evdev python3-picamera2 python3-pillow
+$ apt install python3-opencv python3-evdev python3-picamera2 python3-pillow haproxy
 $ cd /opt
 $ git clone https://github.com/martijnbraam/picam
-$ cp /opt/picam/systemd/camera.service /etc/systemd/system/camera.service
+$ cp /opt/picam/system/camera.service /etc/systemd/system/camera.service
+$ cp /opt/picam/system/haproxy.cfg /etc/haproxy/haproxy.cfg
 $ systemctl start camera
 ```
 
