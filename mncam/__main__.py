@@ -191,6 +191,9 @@ class Camera:
         self.out_hdmi.set_fps(fps)
         self.ui.min_shutter.set(fps)
 
+    def set_tally(self, mask):
+        pass
+
     def update_preview(self, request):
         ordering = []
         toggles = {

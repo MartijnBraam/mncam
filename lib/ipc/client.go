@@ -1,6 +1,9 @@
 package ipc
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
 	"net"
 )
 
@@ -55,4 +58,36 @@ func (c *IPCClient) DoAutoWhitebalance() error {
 	buf := []byte{0x04}
 	_, err := c.conn.Write(buf)
 	return err
+}
+
+func (c *IPCClient) SetTally(tally byte) {
+	payload := []byte{0x05, tally}
+	c.conn.Write(payload)
+}
+
+func (c *IPCClient) SetGain(gain byte) {
+	payload := []byte{0x06, gain}
+	fmt.Printf("SET GAIN %v\n", payload)
+	c.conn.Write(payload)
+}
+
+func (c *IPCClient) SetShutter(shutter uint16) {
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.LittleEndian, byte(0x07))
+	binary.Write(&buf, binary.LittleEndian, shutter)
+	b := buf.Bytes()
+	c.conn.Write(b)
+}
+
+func (c *IPCClient) SetFPS(fps byte) {
+	payload := []byte{0x08, fps}
+	c.conn.Write(payload)
+}
+
+func (c *IPCClient) SetExposureCompensation(ec float32) {
+	var buf bytes.Buffer
+	binary.Write(&buf, binary.LittleEndian, byte(0x09))
+	binary.Write(&buf, binary.LittleEndian, ec)
+	b := buf.Bytes()
+	c.conn.Write(b)
 }

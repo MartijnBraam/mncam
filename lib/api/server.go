@@ -36,6 +36,8 @@ func New(client *ipc.IPCClient) *APIServer {
 	api.HandleFunc("/system", result.GetSystem).Methods("GET")
 	api.HandleFunc("/video/autoExposure", result.GetVideoAutoExposure).Methods("GET")
 	api.HandleFunc("/video/autoExposure", result.PutVideoAutoExposure).Methods("PUT")
+	api.HandleFunc("/video/gain", result.PutVideoGain).Methods("PUT")
+	api.HandleFunc("/video/shutter", result.PutVideoShutter).Methods("PUT")
 
 	api.HandleFunc("/video/whiteBalance/doAuto", result.TriggerWhiteBalance).Methods("PUT")
 

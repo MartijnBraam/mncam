@@ -10,20 +10,33 @@
 </header>
 <hsplit>
     <panel>
-        <div id="mode"></div>
-
-        <group>
-            <label for="whitebalance">White balance</label>
-            <input type="range" min="1000" max="10000" id="whitebalance"><span id="whitebalanceLabel"></span>
-        </group>
-        <group>
-            <label for="gain">Gain</label>
-            <input type="range" min="1" max="22" id="gain"><span id="gainLabel"></span>
-        </group>
-        <group>
-            <label for="shutter">Shutter</label>
-            <input type="range" min="1" max="300" id="shutter"><span id="shutterLabel"></span>
-        </group>
+        <section>
+            <div id="mode"></div>
+        </section>
+        <section>
+            <group>
+                <label for="ae">Auto Exposure</label>
+                <input type="checkbox" id="ae">
+            </group>
+            <group>
+                <label for="ec">Auto Exposure Compensation</label>
+                <input type="range" min="-24" max="24" id="ec"><span id="ecLabel"></span>
+            </group>
+            <group>
+                <label for="gain">Gain</label>
+                <input type="range" min="1" max="22" id="gain"><span id="gainLabel"></span>
+            </group>
+            <group>
+                <label for="shutter">Shutter</label>
+                <input type="range" min="1" max="300" id="shutter"><span id="shutterLabel"></span>
+            </group>
+        </section>
+        <section>
+            <group>
+                <label for="whitebalance">White balance</label>
+                <input type="range" min="1000" max="10000" id="whitebalance"><span id="whitebalanceLabel"></span>
+            </group>
+        </section>
 
 
     </panel>

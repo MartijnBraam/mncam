@@ -24,8 +24,9 @@ type StateWhiteBalance struct {
 }
 
 type StateAutoExposure struct {
-	Mode string `json:"mode"`
-	Type string `json:"type"`
+	Mode         string  `json:"mode"`
+	Type         string  `json:"type"`
+	Compensation float32 `json:"compensation"`
 }
 
 type State struct {
@@ -96,12 +97,13 @@ func (s *APIServer) SetSensorState(gaina float32, gaind float32, exposure uint32
 	})
 }
 
-func (s *APIServer) SetControls(aeEnable bool, awbEnable bool) {
+func (s *APIServer) SetControls(aeEnable bool, awbEnable bool, ec float32) {
 	if aeEnable {
 		s.state.AutoExposure.Mode = "Continuous"
 	} else {
 		s.state.AutoExposure.Mode = "Off"
 	}
+	s.state.AutoExposure.Compensation = ec
 
 	s.BroadcastMessage(&WebsocketMessage{
 		Type: "event",

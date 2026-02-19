@@ -44,9 +44,11 @@ func main() {
 			// Controls
 			var aeEnable bool
 			var awbEnable bool
+			var ec float32
 			binary.Read(buf, binary.LittleEndian, &aeEnable)
 			binary.Read(buf, binary.LittleEndian, &awbEnable)
-			as.SetControls(aeEnable, awbEnable)
+			binary.Read(buf, binary.LittleEndian, &ec)
+			as.SetControls(aeEnable, awbEnable, ec)
 		}
 	}
 }
