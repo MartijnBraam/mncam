@@ -192,7 +192,7 @@ class Camera:
         self.ui.min_shutter.set(fps)
 
     def set_tally(self, mask):
-        pass
+        self.ui.tally.set(mask)
 
     def update_preview(self, request):
         ordering = []

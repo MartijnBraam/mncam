@@ -29,11 +29,16 @@ type StateAutoExposure struct {
 	Compensation float32 `json:"compensation"`
 }
 
+type StateTally struct {
+	Status string `json:"status"`
+}
+
 type State struct {
 	Gain         StateGain
 	Shutter      StateShutter
 	WhiteBalance StateWhiteBalance
 	AutoExposure StateAutoExposure
+	Tally        StateTally
 
 	CCLift   StateRGBL
 	CCGamma  StateRGBL
@@ -97,13 +102,23 @@ func (s *APIServer) SetSensorState(gaina float32, gaind float32, exposure uint32
 	})
 }
 
-func (s *APIServer) SetControls(aeEnable bool, awbEnable bool, ec float32) {
+func (s *APIServer) SetControls(aeEnable bool, awbEnable bool, ec float32, tally byte) {
 	if aeEnable {
 		s.state.AutoExposure.Mode = "Continuous"
 	} else {
 		s.state.AutoExposure.Mode = "Off"
 	}
 	s.state.AutoExposure.Compensation = ec
+	switch tally {
+	case 0:
+		s.state.Tally.Status = "None"
+	case 1:
+		s.state.Tally.Status = "Program"
+	case 2:
+		s.state.Tally.Status = "Preview"
+	case 3:
+		s.state.Tally.Status = "Program"
+	}
 
 	s.BroadcastMessage(&WebsocketMessage{
 		Type: "event",

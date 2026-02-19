@@ -45,10 +45,12 @@ func main() {
 			var aeEnable bool
 			var awbEnable bool
 			var ec float32
+			var tally byte
 			binary.Read(buf, binary.LittleEndian, &aeEnable)
 			binary.Read(buf, binary.LittleEndian, &awbEnable)
 			binary.Read(buf, binary.LittleEndian, &ec)
-			as.SetControls(aeEnable, awbEnable, ec)
+			binary.Read(buf, binary.LittleEndian, &tally)
+			as.SetControls(aeEnable, awbEnable, ec, tally)
 		}
 	}
 }

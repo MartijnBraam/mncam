@@ -38,6 +38,7 @@ class UI:
         self.camera_id = StateNumber()
         self.ae = StateNumber(True)
         self.ec = StateNumber(0.0)
+        self.tally = StateNumber(0)
 
         # Preview state
         self.zebra = StateNumber(False)
@@ -99,7 +100,7 @@ class UI:
         l.add_label(Layout.TOPLEFT, 100, "Gain", "{} dB", self.gain, align="left", name="gain",
                     handler=lambda v: self.tab_state.toggle("gain"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "gain")
-        l.add_label(Layout.TOPMIDDLE, 200, "Timecode", "{}", self.tc, None, "middle")
+        l.add_label(Layout.TOPMIDDLE, 200, "Timecode", "{}", self.tc, None, "middle", name="tc")
         l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
 
         l.add_button(Layout.BOTTOMLEFT, 130, "Zebra", self.zebra, lambda v: self.cam.enable_zebra(v))
@@ -169,6 +170,16 @@ class UI:
 
     def update_state(self, state):
         self.state = state
+
+        if self.tally.once(self):
+            color = (255, 255, 255, 255)
+            if self.tally.value & 2:
+                color = (0, 255, 0, 255)
+            if self.tally.value & 1:
+                color = (255, 0, 0, 255)
+            tc = self.screens["main"]["tc"]
+            if tc is not None:
+                tc.color_text = color
 
         if not self.hdmi:
             while not self.input_queue.empty():

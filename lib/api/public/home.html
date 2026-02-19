@@ -5,7 +5,7 @@
     <link rel="stylesheet" type="text/css" href="/css/style.css">
 </head>
 <body>
-<header>
+<header id="header">
     <h1>MNCAM</h1>
 </header>
 <hsplit>
@@ -35,6 +35,22 @@
             <group>
                 <label for="whitebalance">White balance</label>
                 <input type="range" min="1000" max="10000" id="whitebalance"><span id="whitebalanceLabel"></span>
+            </group>
+        </section>
+        <section>
+            <group>
+                <label>Tally</label>
+                <form id="tally">
+                    <label>
+                        <input type="radio" name="tally" value="None"> Off
+                    </label>
+                    <label>
+                        <input type="radio" name="tally" value="Program"> Program
+                    </label>
+                    <label>
+                        <input type="radio" name="tally" value="Preview"> Preview
+                    </label>
+                </form>
             </group>
         </section>
 

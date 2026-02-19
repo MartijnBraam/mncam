@@ -53,6 +53,7 @@ func (c *Client) sendProperties() {
 				"/video/shutter",
 				"/video/whiteBalance",
 				"/video/autoExposure",
+				"/camera/tallyStatus",
 				"/colorCorrection/lift",
 				"/colorCorrection/gamma",
 				"/colorCorrection/gain",
@@ -106,6 +107,15 @@ func (c *Client) subscribe(property string) {
 				Action:   "propertyValueChanged",
 				Property: "/video/whiteBalance",
 				Value:    c.cam.state.WhiteBalance,
+			},
+		})
+	case "/camera/tallyStatus":
+		c.sendMessage(&WebsocketMessage{
+			Type: "event",
+			Data: &PropertyChanged{
+				Action:   "propertyValueChanged",
+				Property: "/camera/tallyStatus",
+				Value:    c.cam.state.Tally,
 			},
 		})
 	case "/colorCorrection/lift":
@@ -175,7 +185,6 @@ func (c *Client) reader() {
 		default:
 			fmt.Println("Unknown type:", msg.Type)
 		}
-		fmt.Println("MESAGES", msg)
 	}
 }
 

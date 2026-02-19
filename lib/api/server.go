@@ -34,6 +34,10 @@ func New(client *ipc.IPCClient) *APIServer {
 
 	api := result.mux.PathPrefix("/control/api/v1").Subrouter()
 	api.HandleFunc("/system", result.GetSystem).Methods("GET")
+
+	api.HandleFunc("/camera/tallyStatus", result.GetCameraTallyStatus).Methods("GET")
+	api.HandleFunc("/camera/tallyStatus", result.PutCameraTallyStatus).Methods("PUT")
+
 	api.HandleFunc("/video/autoExposure", result.GetVideoAutoExposure).Methods("GET")
 	api.HandleFunc("/video/autoExposure", result.PutVideoAutoExposure).Methods("PUT")
 	api.HandleFunc("/video/gain", result.PutVideoGain).Methods("PUT")

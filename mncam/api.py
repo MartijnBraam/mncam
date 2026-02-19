@@ -127,7 +127,7 @@ class ControlAPI:
 
     def send_controls(self, client):
         ui = self.cam.ui
-        blob = struct.pack(b'<B??f', 0x02, ui.ae.value, self.auto_whitebalance, ui.ec.value)
+        blob = struct.pack(b'<B??fB', 0x02, ui.ae.value, self.auto_whitebalance, ui.ec.value, ui.tally.value)
         self.send(client, blob)
 
     def send(self, client, data):
