@@ -137,6 +137,10 @@ msg "Running installer script"
 sudo cp install.sh "$WORK"/rootfs/opt/mncam/install.sh
 sudo chroot "$WORK"/rootfs sh -c "cd /opt/mncam && ./install.sh image"
 
+msg "Cleaning cache again"
+sudo rm -rf "$WORK"/var/cache/apt/archives/
+sudo rm -rf "$WORK"/usr/share/doc/
+
 msg "Enabling SSH"
 sudo chroot "$WORK"/rootfs systemctl enable ssh
 
