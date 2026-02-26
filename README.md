@@ -58,6 +58,9 @@ For the first prototype:
 * [Raspberry Pi 4 model B](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)
 * [Raspberry Pi HQ camera](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)
 * [Raspberry Pi Touch Display 2 5"](https://www.raspberrypi.com/products/touch-display-2/)
+  * This is an portrait-orientation display which doesn't work that well, better solution is the old display which is landscape-native or a custom waveshare one
+  * [Raspberry Pi Touch Display 7"](https://www.raspberrypi.com/products/raspberry-pi-touch-display/)
+  * [Waveshare 5inch 1024x600 DSI touch display](https://www.waveshare.com/5inch-dsi-lcd-c.htm)
 * [8-50mm C-mount lens](https://www.waveshare.com/product/raspberry-pi/cameras/10mp-pixels/8-50mm-zoom-lens-for-pi.htm)
 * [MicroSD card](https://www.raspberrypi.com/products/sd-cards/)
 * Some pieces of wood to keep everything together and some micro-hdmi cables to hook up video outputs
