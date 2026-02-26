@@ -50,3 +50,14 @@ at http://0.0.0.0:8889/cam has the lowest latency but it also is accessible at :
 
 The camera application exposes an unix socket for control at /tmp/sensor-control for realtime control. There's a golang
 based HTTP api server that works with this that I should publish Soon(tm)
+
+## Bill of materials
+
+For the first prototype:
+
+* [Raspberry Pi 4 model B](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/)
+* [Raspberry Pi HQ camera](https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/)
+* [Raspberry Pi Touch Display 2 5"](https://www.raspberrypi.com/products/touch-display-2/)
+* [8-50mm C-mount lens](https://www.waveshare.com/product/raspberry-pi/cameras/10mp-pixels/8-50mm-zoom-lens-for-pi.htm)
+* [MicroSD card](https://www.raspberrypi.com/products/sd-cards/)
+* Some pieces of wood to keep everything together and some micro-hdmi cables to hook up video outputs
