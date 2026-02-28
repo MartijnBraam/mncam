@@ -23,152 +23,8 @@ show_modules=true;
 cam_w=90;
 cam_l=140;
 
-module picam_cs() {
-    // Raspberry Pi HQ camera module with C mount
-    offset=4;
-    pcb=1.4;
-    translate([-38/2, -38/2, -pcb])
-    union() {
-        // PCB
-        difference() {
-            color("#090")
-                cube([38, 38, pcb]);
-            translate([offset, offset, 3])
-                cylinder(h=10, r=2.5/2, center=true, $fn=180);
-            translate([38-offset, offset, 3])
-                cylinder(h=10, r=2.5/2, center=true, $fn=180);
-            translate([38-offset, 38-offset, 3])
-                cylinder(h=10, r=2.5/2, center=true, $fn=180);
-            translate([offset, 38-offset, 3])
-                cylinder(h=10, r=2.5/2, center=true, $fn=180);
-        }
-        // Lens mount
-        color("#333")
-        difference() {
-            union() {
-                translate([38/2, 38/2, 11.4/2+pcb])
-                    cylinder(h=11.4, r=36/2, center=true);
-                translate([38/2, 38/2, 11.4+pcb+(5.8/2)])
-                    cylinder(h=5.8, r=30.75/2, center=true);
-            }
-            translate([38/2, 38/2, pcb+(17.2/2)+0.1])
-                cylinder(h=17.2, r=22.4/2, center=true);
-        }
-        // Focus ring clamp
-        color("#333")
-        translate([38/2,38,pcb+11.4-(5/2)])
-            cube([10.16, 5, 5.02], center=true);
-        
-        // Lens cap
-        color("#555")
-        translate([38/2, 38/2, pcb+17.2+5/2])
-            cylinder(h=5, r=30/2, center=true);
+include<components.scad>;
 
-    }
-}
-
-module waveshare5inch() {
-    // WaveShare 5" DSI monitor [28146]
-    w=120.7;
-    h=77.2;
-    d=13.4;
-    pcb=9.4;
-    
-    // Digitizer
-    color("#000")
-    cube([h, w, 1]);
-    
-    // IPS area
-    color("#F00")
-    translate([3.1,(120.7-109)/2,-0.01])
-    cube([65.8, 109, 0.01]);
-    
-    // Space occupied by PCB and electronics
-    color("#090")
-    translate([0,0,1])
-    cube([77.2, 120.7, pcb-1]);
-    
-    // Mounts
-    md = d-pcb;
-    hoff = (h-68)/2;
-    woff = (w-113)/2;
-    translate([hoff, woff,d-md/2])
-        cylinder(h=md,r=3.2, center=true, $fn=6);
-    translate([h-hoff, woff,d-md/2])
-        cylinder(h=md,r=3.2, center=true, $fn=6);
-    translate([h-hoff, w-woff,d-md/2])
-        cylinder(h=md,r=3.2, center=true, $fn=6);
-    translate([hoff, w-woff,d-md/2])
-        cylinder(h=md,r=3.2, center=true, $fn=6);
-        
-    // DSI connector
-    color("#eee")
-    translate([h/2-20.6/2, w-5, pcb])
-        cube([20.6,3, 5.5]);
-}
-
-module insert(size, od, l) {
-    translate([0,0,-0.1])
-        cylinder(center=true, r=od/2+0.4, h=0.2,$fn=180);
-    translate([0,0,-0.1-(l/2)])
-        cylinder(center=true, r=od/2, h=l,$fn=180);
-}
-
-module screwhole(size, head_size) {
-    hd=10;
-    d=2;
-    translate([0,0,hd/2])
-        cylinder(center=true, r=head_size/2+0.4, h=hd, $fn=180);
-    
-    translate([0,0,-d/2])
-        cylinder(center=true, r=size/2+0.4, h=hd, $fn=180);    
-}
-
-module mount_cs() {
-    thick=8;
-    inset=22.5;
-    if($preview && show_modules) {
-        translate([cam_w/2, cam_w/2, -inset])
-            picam_cs();
-    }
-    translate([0,0,-thick])
-        difference () {
-        union() {
-            cube([cam_w, cam_w, thick]);
-            translate([cam_w/2, cam_w/2, (inset-thick)/2-(inset-thick)])
-            rotate([0,0, 45])
-            cylinder($fn=4, h=inset-thick, r1=30, r2=42, center=true);
-        }
-        
-        // Lens hole
-        translate([cam_w/2, cam_w/2, 2.5])
-            cylinder(h=inset+thick+10, r=38/2, center=true, $fn=180);
-            
-        // Inset front
-        translate([cam_w/2, cam_w/2, thick/2+0.01])
-            cylinder(h=thick, r1=23, r2=32, center=true, $fn=180);
-        
-        // Sensor screw holes
-        soff = (38/2)-4;
-        translate([cam_w/2-soff, cam_w/2-soff, -inset+thick-0.01])
-            rotate([180, 0, 0])
-            insert(2.5, 4.2, 5);
-        translate([cam_w/2+soff, cam_w/2-soff, -inset+thick-0.01])
-            rotate([180, 0, 0])
-            insert(2.5, 4.2, 5);
-        translate([cam_w/2-soff, cam_w/2+soff, -inset+thick-0.01])
-            rotate([180, 0, 0])
-            insert(2.5, 4.2, 5);
-        translate([cam_w/2+soff, cam_w/2+soff, -inset+thick-0.01])
-            rotate([180, 0, 0])
-            insert(2.5, 4.2, 5);
-
-        
-        // Hole for lens focus clamp
-        translate([cam_w/2,cam_w/2+21,(-inset/2)-1])
-            cube([12, 8, inset], center=true);
-        }        
-}
 
 module cpu_board() {
     color("#090")
@@ -180,10 +36,13 @@ module bottom() {
     thick=7;
     spacer=5;
     
-    if ($preview && show_modules) {
+    if ($preview && show_modules && false) {
         translate([0,0,thick+1.6+spacer])
             cpu_board();
     }
+    
+    translate([10, 30, thick+1.6+spacer])
+        raspberry_pi();
     
     difference() {
         translate([0,0,0])
