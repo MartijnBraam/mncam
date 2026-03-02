@@ -123,7 +123,7 @@ module case() {
     }
     
     // Back
-    if (show_modules) {
+    if ($preview && show_modules) {
         translate([(case_width-display_width)/2, 50, 85])
         rotate([0, 96, -90])
             waveshare_with_pi();
@@ -219,6 +219,10 @@ module case_b() {
         translate([case_width-case_screw_offset, split_pos, case_height-case_screw_offset])
         rotate([-90, 0, 0])
             screwhole(2.5, 4, 8, 2);
+        
+        // Display touch flex
+        translate([12.4+18, 47, 5.5])
+            cube([10, 20, 3], center=true);
     }
 }
 
@@ -232,7 +236,8 @@ module split() {
     }
 }
 
-case_a();
+//case_a();
 
-translate([0, 5, 0])
+translate([0,0 , 60])
+rotate([-95, 0, 0])
 case_b();
