@@ -1,3 +1,4 @@
+import re
 import threading
 import time
 
@@ -74,6 +75,7 @@ class Widget:
         self.color_active = (0, 128, 255, 200)
         self.color_inactive = (128, 128, 128, 200)
         self.color_clear = (0, 0, 0, 0)
+        self.color_background = None
         self._dirty = StateNumber(False)
 
     def render(self, ctx):
@@ -88,9 +90,18 @@ class Widget:
     def mark_dirty(self):
         self._dirty.force_state(True)
 
+    def _clear(self, ctx):
+        color = self.color_clear
+        if self.color_background:
+            color = self.color_background
+        ctx.rectangle((self.x, self.y, self.x2, self.y2), fill=color)
+        ctx.has_changed = True
+
 
 class Button(Widget):
     FONT = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 26)
+    FA = ImageFont.truetype("/usr/share/fonts-font-awesome/fonts/fontawesome-webfont.ttf", 30)
+    RE_FA = re.compile(u'[\ue000-\uf8ff]', flags=re.UNICODE)
 
     def __init__(self, width, text, state, handler, state_cmp=None):
         super().__init__()
@@ -99,6 +110,9 @@ class Button(Widget):
         self.state = state
         self.state_cmp = state_cmp
         self.handler = handler
+        self.font = Button.FONT
+        if self.RE_FA.match(self.text):
+            self.font = Button.FA
 
     def render(self, ctx):
         if not self.state.once(self):
@@ -112,8 +126,8 @@ class Button(Widget):
         fill = self.color_active if active else self.color_clear
         ctx.rectangle((self.x, self.y, self.x2, self.y2), fill=fill)
 
-        _, _, w, h = ctx.textbbox((0, 0), str(self.text), font=self.FONT)
-        ctx.text((self.x + ((self.width - w) / 2), self.y2 - 46), str(self.text), font=self.FONT,
+        _, _, w, h = ctx.textbbox((0, 0), str(self.text), font=self.font)
+        ctx.text((self.x + ((self.width - w) / 2), self.y2 - 46), str(self.text), font=self.font,
                  fill=(255, 255, 255, 255),
                  stroke_fill=(0, 0, 0, 255), stroke_width=1)
         return True
@@ -215,13 +229,13 @@ class ToggleRow(Widget):
         self.state_cmp = state_cmp
         self.handler = handler
         self.height = 64
-        self.color_clear = background
+        self.color_background = background
         self.text_width = text_width
 
     def render(self, ctx):
         if not self.state.once(self) and not self._dirty.once():
             return
-        ctx.rectangle((self.x, self.y, self.x2, self.y2), fill=self.color_clear)
+        self._clear(ctx)
         ctx.text((self.x + 10, self.y + 16), str(self.text), font=self.FONT, stroke_fill=(0, 0, 0, 255),
                  stroke_width=1)
         if self.text_width is None:
@@ -271,7 +285,7 @@ class RadioRow(Widget):
     def render(self, ctx):
         if not self.state.once(self) and not self._dirty.once():
             return
-        ctx.rectangle((self.x, self.y, self.x2, self.y2), fill=self.color_clear)
+        self._clear(ctx)
         ctx.text((self.x + 10, self.y + 16), str(self.text), font=self.FONT, stroke_fill=(0, 0, 0, 255),
                  stroke_width=1)
         if self.text_width is None:
@@ -322,7 +336,7 @@ class Slider(Widget):
         self.height = 64
         self.state = state
         self.handler = handler
-        self.color_clear = background
+        self.color_background = background
         self.text_width = text_width
         self.thickness = 2
         self.radius = 10
@@ -333,14 +347,15 @@ class Slider(Widget):
         self.min = min
         self.max = max
         self.active = True
-        self.color_bar = (0, 0, 0, 200)
+        self.color_bar = (0, 0, 0, 255)
         self.color_knob = (255, 255, 255, 255)
 
     def render(self, ctx):
         if not self.state.once(self) and not self._dirty.once():
             return
 
-        ctx.rectangle((self.x, self.y, self.x2, self.y2), fill=self.color_clear)
+        self._clear(ctx)
+
         ctx.text((self.x + 10, self.y + 16), str(self.text), font=self.FONT, stroke_fill=(0, 0, 0, 255),
                  stroke_width=1)
         if self.text_width is None:
@@ -387,18 +402,13 @@ class Slider(Widget):
 
 
 class VBox(Widget):
-    def __init__(self, name=None, vpadding=0, hpadding=0, background=False, border=10):
+    def __init__(self, name=None, vpadding=0, hpadding=0, border=10):
         super().__init__()
         self.name = name
         self.widgets = []
         self.vpadding = vpadding
         self.hpadding = hpadding
-        self.background = background
         self.border = border
-        if self.background:
-            self.color_background = (0, 0, 0, 128)
-        else:
-            self.color_background = (0, 0, 0, 0)
 
     def add(self, widget):
         self.widgets.append(widget)
@@ -415,13 +425,12 @@ class VBox(Widget):
             w.y2 = w.y + w.height
             w.layout_width = self.layout_width
             w.layout_height = self.layout_height
-            if w.color_clear is None:
-                w.color_clear = self.color_background
+            w.color_clear = self.color_clear
 
     def render(self, ctx):
         if self.visible.once(self):
-            ctx.rectangle((self.x, self.y, self.x2, self.y2), fill=(0, 0, 0, 0))
-            if self.background:
+            ctx.rectangle((self.x, self.y, self.x2, self.y2), fill=self.color_clear)
+            if self.color_background:
                 ctx.rectangle((
                     self.x + self.hpadding - self.border,
                     self.y + self.vpadding - self.border,
@@ -460,12 +469,14 @@ class Layout:
     BOTTOMRIGHT = 5
     MIDDLE = 6
 
-    def __init__(self, width, height):
+    def __init__(self, width, height, background):
         self.width = width
         self.height = height
-        self.buf = Image.new("RGBA", (self.width, self.height), (0, 0, 0, 0))
+        self.background = background
+        self.buf = Image.new("RGBA", (self.width, self.height), self.background)
         self.on_double_tap_empty = None
         self.page_state = None
+        self.dirty = True
 
         self.widgets = {}
         for i in range(7):
@@ -523,6 +534,7 @@ class Layout:
                     w.y2 = w.y + height
                     w.layout_width = self.width
                     w.layout_height = self.height
+                w.color_clear = self.background
                 offset += w.width + padding
                 if hasattr(w, "compute"):
                     w.compute()
@@ -551,6 +563,9 @@ class Layout:
 
         ctx = ImageDraw.Draw(self.buf)
         ctx.has_changed = False
+        if self.dirty:
+            ctx.has_changed = True
+            self.dirty = False
         for attachment in range(7):
             for w in self.widgets[attachment]:
                 if w.visible.value:

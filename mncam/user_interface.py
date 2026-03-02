@@ -1,7 +1,9 @@
 import datetime
 import math
+import os.path
 import queue
 
+from mncam.backlight import find_backlight, get_backlight_int, set_backlight
 from mncam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent, VBox, Slider, \
     ToggleRow, Guides, RadioRow
 
@@ -15,7 +17,8 @@ class UI:
         self.hdmi = hdmi
 
         self.screens = {}
-        self.create_screen("main")
+        self.create_screen("main", (0, 0, 0, 0))
+        self.create_screen("settings", (34, 43, 55, 255))
         self.active_screen = "main"
         self.paint_hook = None
         self.state = None
@@ -54,11 +57,32 @@ class UI:
         # UI state
         self.tab_state = StateNumber("")
 
+        # Settings
+        bl = find_backlight(config)
+        if bl is not None:
+            self.backlight = StateNumber(get_backlight_int(bl, "brightness"))
+            self.min_backlight = StateNumber(1)
+            self.max_backlight = StateNumber(get_backlight_int(bl, "max_brightness"))
+            if self.backlight.value == 0:
+                # Make sure the backlight is never fully off
+                set_backlight(bl, 1)
+                self.backlight.set(1)
+            if config.monitor.backlight <= self.max_backlight.value:
+                set_backlight(bl, config.monitor.backlight)
+                self.backlight.set(config.monitor.backlight)
+            self.bl = bl
+        else:
+            self.bl = None
+            self.backlight = StateNumber(0)
+            self.min_backlight = StateNumber(0)
+            self.max_backlight = StateNumber(0)
+
         self.input_queue = queue.Queue()
         if self.hdmi:
             self._create_hdmi_layout()
         else:
             self._create_main_layout()
+            self._create_settings_layout()
 
     def start(self):
         if self.hdmi:
@@ -105,6 +129,8 @@ class UI:
         l.add_label(Layout.TOPMIDDLE, 130, "Timecode", "{}", self.tc, None, "middle", name="tc")
 
         l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
+        l.add_button(Layout.TOPRIGHT, 64, "\uf013", StateNumber(False),
+                     lambda v: self.open_settings(True))
 
         l.add_button(Layout.BOTTOMLEFT, 130, "Zebra", self.zebra, lambda v: self.cam.enable_zebra(v))
         l.add_button(Layout.BOTTOMLEFT, 130, "Hist.", self.histogram, lambda v: self.cam.enable_histogram(v))
@@ -163,14 +189,29 @@ class UI:
 
         l.compute()
 
+    def _create_settings_layout(self):
+        l: Layout = self.screens["settings"]
+
+        l.add_button(Layout.TOPRIGHT, 64, "\uf013", StateNumber(False),
+                     lambda v: self.open_settings(False))
+
+        page1 = VBox(name="")
+        page1.add(
+            Slider("Backlight", self.backlight, handler=lambda v: self.set_backlight(v),
+                   min=self.min_backlight, max=self.max_backlight))
+        l.add_widget(Layout.MIDDLE, page1)
+        page1.compute()
+
+        l.compute()
+
     def cycle_guides(self):
         if self.guides.value == "thirds":
             self.guides.set(False)
         elif not self.guides.value:
             self.guides.set("thirds")
 
-    def create_screen(self, name):
-        self.screens[name] = Layout(self.width, self.height)
+    def create_screen(self, name, bg):
+        self.screens[name] = Layout(self.width, self.height, bg)
 
     def update_state(self, state):
         self.state = state
@@ -206,3 +247,19 @@ class UI:
         buf = self.screens[self.active_screen].render()
         if buf is not None:
             self.paint_hook(buf)
+
+    def switch_screen(self, name):
+        self.active_screen = name
+        self.screens[self.active_screen].dirty = True
+
+    def open_settings(self, state):
+        if state:
+            self.switch_screen("settings")
+        else:
+            self.switch_screen("main")
+
+    def set_backlight(self, value):
+        if self.bl is not None:
+            set_backlight(self.bl, value)
+            self.backlight.set(value)
+            self.config.save_config()

@@ -1,8 +1,11 @@
+import glob
 import os.path
 import configparser
 
 import humanfriendly
 import libcamera
+
+from mncam.backlight import find_backlight, get_backlight_int
 
 
 class MonitorConfig:
@@ -15,6 +18,7 @@ class MonitorConfig:
         self.touchscreen_res = (1280, 720)
         self.exposure_helper_min = 61
         self.exposure_helper_max = 70
+        self.backlight = 0
 
 
 class OutputConfig:
@@ -72,6 +76,11 @@ class Config:
             self.monitor.output = "DSI-1"
         else:
             self.monitor.output = "HDMI-A-2"
+
+        bl = find_backlight(self)
+        if bl is not None:
+            mb = get_backlight_int(bl, "max_brightness")
+            self.monitor.backlight = mb
 
     def load_config(self):
         parser = configparser.ConfigParser()
