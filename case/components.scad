@@ -180,6 +180,11 @@ module waveshare5inch() {
     color("#eee")
     translate([h/2-20.6/2, w-5, pcb])
         cube([20.6,3, 5.5]);
+        
+    // The touch flex sticks out a bit
+    color("#09f")
+    translate([-1.5,20,4])
+        cube([3, 10, 8], center=true);
 }
 
 module mount_cs(thick=8, width=140, height=90) {
