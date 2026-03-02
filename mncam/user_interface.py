@@ -5,7 +5,7 @@ import queue
 
 from mncam.backlight import find_backlight, get_backlight_int, set_backlight
 from mncam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent, VBox, Slider, \
-    ToggleRow, Guides, RadioRow
+    ToggleRow, Guides, RadioRow, MoveEvent, ReleaseEvent
 
 
 class UI:
@@ -235,6 +235,10 @@ class UI:
                 event = self.input_queue.get()
                 if isinstance(event, TapEvent):
                     self.screens[self.active_screen].tap(event.x, event.y)
+                elif isinstance(event, MoveEvent):
+                    self.screens[self.active_screen].move(event.x, event.y)
+                elif isinstance(event, ReleaseEvent):
+                    self.screens[self.active_screen].release(event.x, event.y)
                 elif isinstance(event, DoubleTapEvent):
                     self.screens[self.active_screen].doubletap(event.x, event.y)
 

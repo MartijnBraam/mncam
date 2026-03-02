@@ -59,6 +59,18 @@ class DoubleTapEvent:
         self.y = y
 
 
+class MoveEvent:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
+class ReleaseEvent:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+
 class Widget:
     def __init__(self):
         self.name = None
@@ -85,6 +97,12 @@ class Widget:
         pass
 
     def doubletap(self, x, y):
+        pass
+
+    def move(self, x, y):
+        pass
+
+    def release(self, x, y):
         pass
 
     def mark_dirty(self):
@@ -428,6 +446,19 @@ class Slider(Widget):
         if self.handler is not None:
             self.handler(x)
 
+    def move(self, x, y):
+        slide_start = self.text_width + 10
+        slide_len = self.x2 - 10 - (self.x + slide_start)
+
+        if x < slide_start:
+            return
+        x -= slide_start
+        x /= slide_len
+        x *= self.max.value - self.min.value
+        x += self.min.value
+        if self.handler is not None:
+            self.handler(x)
+
 
 class VBox(Widget):
     def __init__(self, name=None, vpadding=0, hpadding=0, border=10):
@@ -437,6 +468,7 @@ class VBox(Widget):
         self.vpadding = vpadding
         self.hpadding = hpadding
         self.border = border
+        self.drag_widget = None
 
     def add(self, widget):
         self.widgets.append(widget)
@@ -477,6 +509,7 @@ class VBox(Widget):
         for w in self.widgets:
             if w.visible.value and w.x <= x <= w.x2 and w.y <= y <= w.y2:
                 w.tap(x - w.x, y - w.y)
+                self.drag_widget = w
                 break
 
     def doubletap(self, x, y):
@@ -486,6 +519,15 @@ class VBox(Widget):
             if w.visible.value and w.x <= x <= w.x2 and w.y <= y <= w.y2:
                 w.doubletap(x - w.x, y - w.y)
                 break
+
+    def release(self, x, y):
+        if self.drag_widget is not None:
+            self.drag_widget.release(x, y)
+            self.drag_widget = None
+
+    def move(self, x, y):
+        if self.drag_widget is not None:
+            self.drag_widget.move(x, y)
 
 
 class Layout:
@@ -505,6 +547,7 @@ class Layout:
         self.on_double_tap_empty = None
         self.page_state = None
         self.dirty = True
+        self.drag_widget = None
 
         self.widgets = {}
         for i in range(7):
@@ -607,6 +650,7 @@ class Layout:
             for w in self.widgets[attachment]:
                 if w.visible.value and w.x <= x <= w.x2 and w.y <= y <= w.y2:
                     w.tap(x - w.x, y - w.y)
+                    self.drag_widget = w
                     break
 
     def doubletap(self, x, y):
@@ -619,6 +663,15 @@ class Layout:
             # Double tap outside a widget, used for zooming
             if self.on_double_tap_empty is not None:
                 self.on_double_tap_empty()
+
+    def release(self, x, y):
+        if self.drag_widget is not None:
+            self.drag_widget.release(x, y)
+            self.drag_widget = None
+
+    def move(self, x, y):
+        if self.drag_widget is not None:
+            self.drag_widget.move(x, y)
 
 
 def _touch_transform(config, x, y):
@@ -652,12 +705,14 @@ def _input_thread(path, queue, config):
         if event.type == evdev.ecodes.EV_ABS:
             if event.code == evdev.ecodes.ABS_MT_POSITION_X:
                 last_x = event.value
+                pos = _touch_transform(config, last_x, last_y)
+                queue.put(MoveEvent(pos[0], pos[1]))
             elif event.code == evdev.ecodes.ABS_MT_POSITION_Y:
                 last_y = event.value
         if event.type == evdev.ecodes.EV_KEY and evdev.ecodes.BTN_TOUCH:
+            pos = _touch_transform(config, last_x, last_y)
             if event.value == 1:
                 # Touch down
-                pos = _touch_transform(config, last_x, last_y)
                 time_since_last = time.monotonic() - last_t
                 if time_since_last < 0.5:
                     queue.put(DoubleTapEvent(pos[0], pos[1]))
@@ -666,7 +721,7 @@ def _input_thread(path, queue, config):
                 last_t = time.monotonic()
             else:
                 # Touch up
-                pass
+                queue.put(ReleaseEvent(pos[0], pos[1]))
 
 
 def HandleInputs(input_queue, config):
