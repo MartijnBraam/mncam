@@ -591,9 +591,11 @@ def _touch_transform(config, x, y):
     flip_x ^= config.monitor.touchscreen_flip_x
     flip_y ^= config.monitor.touchscreen_flip_y
     if flip_x:
-        x = config.touchscreen_res[0] - x
+        x = config.monitor.touchscreen_res[0] - x
     if flip_y:
-        y = config.touchscreen_res[1] - y
+        y = config.monitor.touchscreen_res[1] - y
+    x = x / config.monitor.touchscreen_res[0] * config.monitor.mode[0]
+    y = y / config.monitor.touchscreen_res[1] * config.monitor.mode[1]
     return x, y
 
 
