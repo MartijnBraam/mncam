@@ -101,7 +101,9 @@ class UI:
         l.add_label(Layout.TOPLEFT, 100, "Gain", "{} dB", self.gain, align="left", name="gain",
                     handler=lambda v: self.tab_state.toggle("gain"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "gain")
-        l.add_label(Layout.TOPMIDDLE, 200, "Timecode", "{}", self.tc, None, "middle", name="tc")
+
+        l.add_label(Layout.TOPMIDDLE, 130, "Timecode", "{}", self.tc, None, "middle", name="tc")
+
         l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
 
         l.add_button(Layout.BOTTOMLEFT, 130, "Zebra", self.zebra, lambda v: self.cam.enable_zebra(v))
