@@ -20,6 +20,7 @@ class Camera:
     OVERLAY_FALSE = 1
     OVERLAY_FOCUS = 2
     OVERLAY_UI = 3
+    OVERLAY_HISTOGRAM = 4
 
     def __init__(self):
         self.cam = Picamera2()
@@ -57,7 +58,7 @@ class Camera:
         self.drm = DRMOutput(self.config.output.mode[0], self.config.output.mode[1])
         self.out_hdmi = self.drm.use_output(self.output_hdmi, self.config.output.mode[0], self.config.output.mode[1],
                                             self.config.output.framerate, 1)
-        self.out_dsi = self.drm.use_output(self.output_ui, self.ui_size[0], self.ui_size[1], None, 4)
+        self.out_dsi = self.drm.use_output(self.output_ui, self.ui_size[0], self.ui_size[1], None, 5)
 
         # Configure the hardware H.264 encoder
         if self.config.encoder.enabled:
@@ -97,6 +98,7 @@ class Camera:
             "zebra": 0,
             "false": 0,
             "focus": 0,
+            "histogram": 0,
         }
 
     def start(self):
@@ -107,6 +109,7 @@ class Camera:
 
         time.sleep(1)
         self.out_hdmi.overlay_position(0, 0, 0, self.config.output.mode[0], 64)
+        self.out_dsi.overlay_position(self.OVERLAY_HISTOGRAM, 64, self.config.monitor.mode[1] - 200, 256, 100)
         self.out_hdmi.overlay_opacity(0, 0.0)
 
         # Set initial state to keep consistency with the API
@@ -146,6 +149,10 @@ class Camera:
     def enable_zebra(self, enable):
         self.ui.zebra.set(enable)
         self.out_dsi.overlay_opacity(self.OVERLAY_ZEBRA, 1.0 if enable else 0.0)
+
+    def enable_histogram(self, enable):
+        self.ui.histogram.set(enable)
+        self.out_dsi.overlay_opacity(self.OVERLAY_HISTOGRAM, 1.0 if enable else 0.0)
 
     def enable_false_color(self, enable):
         self.ui.false_color.set(enable)
@@ -200,6 +207,7 @@ class Camera:
             "zebra": self.ui.zebra.value,
             "false": self.ui.false_color.value,
             "focus": self.ui.focus_assist.value,
+            "histogram": self.ui.histogram.value,
         }
         for k in self.last_update:
             self.last_update[k] += 1
@@ -236,6 +244,17 @@ class Camera:
                     self.drm.set_overlay(mat, output=self.output_ui, num=self.OVERLAY_FOCUS)
                     self.update_idx = 0
                     self.last_update[task] = 0
+            elif task == 'histogram':
+                grey = mapped.array[0:self.preview_h]
+                hist = cv2.calcHist([grey], [0], None, [256], [0, 255])
+                cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX)
+                hist = np.int32(np.around(hist))
+                h = np.full((100, 256, 4), dtype=np.uint8, fill_value=(0,0,0,160))
+                for x, y in enumerate(hist):
+                    cv2.line(h, (x, 0), (x, y[0]), (255, 255, 255, 255), 1)
+                y = np.flipud(h)
+                self.drm.set_overlay(y, output=self.output_ui, num=self.OVERLAY_HISTOGRAM)
+                self.last_update[task] = 0
 
 
 if __name__ == '__main__':

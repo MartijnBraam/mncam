@@ -68,6 +68,9 @@ class Connector:
         if idx in self.overlay_fb and self.overlay_fb[idx] is not None:
             self.overlay_dirty[idx] = True
 
+    def overlay_resolution(self, idx, w, h):
+        pass
+
     def overlay_opacity(self, idx, opacity):
         val = int(float(0xFFFF) * opacity)
         self.overlay[idx].set_prop("alpha", val)
@@ -195,10 +198,11 @@ class DRMOutput(NullPreview):
         if init:
             conn.overlay_fb[num] = pykms.DumbFramebuffer(self.card, w, h, "AB24")
 
-        with mmap.mmap(conn.overlay_fb[num].fd(0), w * h * 4, mmap.MAP_SHARED, mmap.PROT_WRITE) as mm:
+        with mmap.mmap(conn.overlay_fb[num].fd(0), w * h * channels, mmap.MAP_SHARED, mmap.PROT_WRITE) as mm:
             if isinstance(overlay, Image.Image):
                 mm.write(overlay.tobytes())
             else:
-                mm.write(np.ascontiguousarray(overlay).data)
+                ca = np.ascontiguousarray(overlay)
+                mm.write(ca.data)
 
         conn.overlay_dirty[num] = True
