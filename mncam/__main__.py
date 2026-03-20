@@ -107,7 +107,11 @@ class Camera:
         if self.config.encoder.enabled:
             self.cam.start_encoder(self.encoder)
 
-        time.sleep(1)
+        for i in range(100):
+            time.sleep(0.1)
+            if self.out_hdmi.overlay_exists(0) and self.out_dsi.overlay_exists(0):
+                break
+
         self.out_hdmi.overlay_position(0, 0, 0, self.config.output.mode[0], 64)
         self.out_dsi.overlay_position(self.OVERLAY_HISTOGRAM, 64, self.config.monitor.mode[1] - 200, 256, 100)
         self.out_hdmi.overlay_opacity(0, 0.0)

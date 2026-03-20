@@ -75,6 +75,9 @@ class Connector:
         val = int(float(0xFFFF) * opacity)
         self.overlay[idx].set_prop("alpha", val)
 
+    def overlay_exists(self, idx):
+        return idx in self.overlay
+
     def set_fps(self, fps):
         mode = self._conn.get_default_mode()
         mode.hdisplay = self.width
