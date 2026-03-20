@@ -1,5 +1,6 @@
 import time
 import cv2
+import libcamera
 
 from libcamera import ColorSpace
 from picamera2 import Picamera2, MappedArray
@@ -189,6 +190,37 @@ class Camera:
         self.enable_auto_exposure(False)
         self.ui.gain.set(gain)
         self.cam.set_controls({"AnalogueGain": gain})
+
+    def set_focus(self, distance):
+        self.ui.focus.set(distance)
+        self.cam.set_controls({"LensPosition": distance})
+
+    def set_autofocus(self, mode):
+        self.ui.af.set(mode)
+        if mode == "M":
+            self.cam.set_controls({"AfMode": libcamera.controls.AfModeEnum.Manual})
+        elif mode == "C":
+            self.cam.set_controls({"AfMode": libcamera.controls.AfModeEnum.Continuous})
+        elif mode == "S":
+            self.cam.set_controls({"AfMode": libcamera.controls.AfModeEnum.Auto})
+
+    def set_focus_area(self, x, y, width=64, height=64):
+        self.ui.af_pos.set((x, y))
+        sw = self.state["ScalerCrop"][2]
+        sh = self.state["ScalerCrop"][3]
+        x *= sw
+        x += self.state["ScalerCrop"][0]
+        y *= sh
+        y += self.state["ScalerCrop"][1]
+        width = width / 1920 * sw
+        height = height / 1080 * sh
+        win = [(int(x-(width/2)), int(y-(height/2)), int(width), int(height))]
+        self.cam.set_controls({"AfWindows": win, "AfMetering": libcamera.controls.AfMeteringEnum.Windows})
+        if self.ui.af.value == "S":
+            self.trigger_autofocus()
+
+    def trigger_autofocus(self):
+        self.cam.autofocus_cycle(wait=False)
 
     def set_shutter(self, shutter):
         self.enable_auto_exposure(False)

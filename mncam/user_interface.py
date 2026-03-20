@@ -32,6 +32,11 @@ class UI:
         ctrl_min, ctrl_max, ctrl_default = limits["ExposureValue"]
         self.min_ec = StateNumber(ctrl_min)
         self.max_ec = StateNumber(ctrl_max)
+        self.has_af = StateNumber("LensPosition" in limits)
+        if self.has_af.value:
+            ctrl_min, ctrl_max, ctrl_default = limits["LensPosition"]
+            self.min_focus = StateNumber(ctrl_min)
+            self.max_focus = StateNumber(ctrl_max)
 
         # Camera state
         self.fps = StateNumber(self.config.sensor.framerate)
@@ -41,6 +46,9 @@ class UI:
         self.camera_id = StateNumber()
         self.ae = StateNumber(True)
         self.ec = StateNumber(0.0)
+        self.af = StateNumber("C")
+        self.af_pos = StateNumber((0.5,0.5))
+        self.focus = StateNumber(0.0)
         self.tally = StateNumber(0)
 
         # Preview state
@@ -128,6 +136,11 @@ class UI:
 
         l.add_label(Layout.TOPMIDDLE, 130, "Timecode", "{}", self.tc, None, "middle", name="tc")
 
+        if self.has_af.value:
+            l.add_label(Layout.TOPRIGHT, 80, "Focus", "{}", self.af, align="left",
+                        handler=lambda v: self.tab_state.toggle("focus"),
+                        button_state=self.tab_state, state_cmp=lambda s: s == "focus")
+
         l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
         l.add_button(Layout.TOPRIGHT, 64, "\uf013", StateNumber(False),
                      lambda v: self.open_settings(True))
@@ -143,7 +156,7 @@ class UI:
         l.page_state = self.tab_state
         # Empty panel which shows the guides when needed
         empty = VBox(name="")
-        empty.add(Guides(self.guides))
+        empty.add(Guides(self.guides, self.af, self.af_pos, handler=lambda x, y: self.cam.set_focus_area(x, y)))
         l.add_widget(Layout.MIDDLE, empty)
         empty.compute()
 
@@ -184,6 +197,23 @@ class UI:
                                background=(0, 0, 0, 80)))
         ae_panel.compute()
         l.add_widget(Layout.MIDDLE, ae_panel)
+
+        # Focus control panel
+        if self.has_af.value:
+            focus_panel = VBox(name="focus")
+            focus_panel.add(
+                Slider("Distance", self.focus, min=self.min_focus, max=self.max_focus, handler=lambda v: self.cam.set_focus(v),
+                       background=(0, 0, 0, 80)))
+            focus_panel.add(RadioRow("Mode", self.af, options={
+                "M": "Manual",
+                "S": "Single",
+                "C": "Continuous",
+            }, handler=lambda v: self.cam.set_autofocus(v),
+                                   background=(0, 0, 0, 80)))
+
+            focus_panel.compute()
+            l.add_widget(Layout.MIDDLE, focus_panel)
+
 
         l.on_double_tap_empty = lambda: self.cam.enable_focus_zoom(self.zoom.value == 1.0)
 
@@ -246,6 +276,15 @@ class UI:
         self.tc.set(tc.strftime("%H:%M:%S"))
         self.shutter.set(int(1000000 / state["ExposureTime"]))
         self.gain.set(int(round(10 * math.log10(state["AnalogueGain"]))))
+        if "LensPosition" in state:
+            self.focus.set(state["LensPosition"])
+        if "AfState" in state:
+            if state["AfState"] == 0:
+                self.af.set("M")
+            elif state["AfState"] == 1:
+                self.af.set("S")
+            elif state["AfState"] == 2:
+                self.af.set("C")
 
         if self.ae.once("update_state"):
             self.screens["main"]["gain"].color_text = (128, 128, 128, 255) if self.ae.value else (255, 255, 255, 255)

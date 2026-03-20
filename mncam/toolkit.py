@@ -83,6 +83,7 @@ class Widget:
         self.layout_width = 0
         self.layout_height = 0
         self.hexpand = False
+        self.vexpand = False
         self.visible = StateNumber(True)
         self.color_active = (0, 128, 255, 200)
         self.color_inactive = (128, 128, 128, 200)
@@ -170,10 +171,15 @@ class GuidesButton(Button):
 
 
 class Guides(Widget):
-    def __init__(self, state):
+    def __init__(self, state, af_state, af_pos, handler=None):
         super().__init__()
         self.state = state
+        self.af_state = af_state
+        self.af_pos = af_pos
+        self.handler = handler
         self.hexpand = True
+        self.vexpand = True
+        self.visible.value = True
 
     def _rect(self, ctx, size, w):
         width = self.layout_width
@@ -192,7 +198,7 @@ class Guides(Widget):
             ctx.line((x1, y2, x2, y2), (128, 128, 128, 128), width=w)
 
     def render(self, ctx):
-        if not self.state.once(self) and not self._dirty.once():
+        if not self.state.once(self) and not self._dirty.once() and not self.af_state.once(self) and not self.af_pos.once(self):
             return
         width = self.layout_width
         height = self.layout_height
@@ -216,6 +222,14 @@ class Guides(Widget):
             ctx.line((old, 64, old, height - 65), (128, 128, 128, 128), width=w)
             ctx.line((width - old, 64, width - old, height - 65), (128, 128, 128, 128), width=w)
 
+        if self.af_state.value != "M":
+            afx = width * self.af_pos.value[0]
+            afy = height * self.af_pos.value[1]
+            ctx.rectangle((afx-32, afy-32, afx+32, afy+32), fill=None, outline=(255, 255, 255, 255), width=w)
+
+    def tap(self, x, y):
+        if self.handler is not None:
+            self.handler(x/self.layout_width, (y+self.y)/self.layout_height)
 
 class Label(Button):
     FONT = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 26)
@@ -482,6 +496,9 @@ class VBox(Widget):
             w.x2 = w.x + self.width
             if w.hexpand:
                 w.x2 = self.x2 - self.hpadding
+            if w.vexpand:
+                w.y2 = self.y2 - self.vpadding
+                w.height = w.y2 - w.y
             w.y = self.y + self.vpadding + offset
             offset += w.height
             w.y2 = w.y + w.height
@@ -509,7 +526,7 @@ class VBox(Widget):
         x += self.x
         y += self.y
         for w in self.widgets:
-            if w.visible.value and w.x <= x <= w.x2 and w.y <= y <= w.y2:
+            if isinstance(w, Guides) or w.visible.value and w.x <= x <= w.x2 and w.y <= y <= w.y2:
                 w.tap(x - w.x, y - w.y)
                 self.drag_widget = w
                 break
