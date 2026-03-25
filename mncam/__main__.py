@@ -1,3 +1,4 @@
+import os.path
 import time
 import cv2
 import libcamera
@@ -81,6 +82,7 @@ class Camera:
         self.thresh_zebra = 230
         self.thresh_under = 18
 
+        self.cal = {}
         self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls)
         self.ui_hdmi = UI(1920, 64, self, self.config, self.cam.camera_controls, hdmi=True)
 
@@ -122,6 +124,11 @@ class Camera:
         self.preview_w, self.preview_h = self.cam.stream_configuration("lores")["size"]
         self.create_mask_images()
         self.ui.start()
+
+        # Load calibration for WB data
+        sensor_model = self.cam.camera_properties["Model"]
+        cal_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration")
+        self.cal = self.cam.load_tuning_file(f"{sensor_model}.json", dir=cal_dir)
 
     def create_mask_images(self):
         self.mat_black = np.zeros((self.preview_h, self.preview_w), np.uint8)
@@ -215,7 +222,32 @@ class Camera:
             self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Cloudy})
 
     def set_whitebalance(self, temperature):
-        pass
+        awb = Picamera2.find_tuning_algo(self.cal, "rpi.awb")
+        curve = {}
+        lower = None
+        upper = None
+        for i in range(0, len(awb["ct_curve"]), 3):
+            temp = awb["ct_curve"][i]
+            r = awb["ct_curve"][i + 1]
+            b = awb["ct_curve"][i + 2]
+            if temp < temperature:
+                lower = temp
+            if temp > temperature and upper is None:
+                upper = temp
+            curve[temp] = (r, b)
+        if upper is None:
+            upper = temp
+        if lower is None:
+            lower = awb["ct_curve"][0]
+
+        if upper == lower:
+            r, b = curve[upper]
+        else:
+            offset = (temperature - lower) / (upper - lower)
+            r = curve[lower][0] * (1.0 - offset) + curve[upper][0] * offset
+            b = curve[lower][1] * (1.0 - offset) + curve[upper][1] * offset
+        self.enable_auto_whitebalance(False)
+        self.cam.set_controls({"ColourGains": (1.0 / r, 1.0 / b)})
 
     def set_autofocus(self, mode):
         if 'AfState' not in self.state:
