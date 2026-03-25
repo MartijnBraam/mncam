@@ -382,4 +382,5 @@ class UI:
         if self.bl is not None:
             set_backlight(self.bl, value)
             self.backlight.set(value)
+            self.config.monitor.backlight = int(value)
             self.config.save_config()
