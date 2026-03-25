@@ -196,6 +196,9 @@ class Camera:
         self.cam.set_controls({"LensPosition": distance})
 
     def set_autofocus(self, mode):
+        if 'AfState' not in self.state:
+            return
+
         self.ui.af.set(mode)
         if mode == "M":
             self.cam.set_controls({"AfMode": libcamera.controls.AfModeEnum.Manual})
@@ -205,6 +208,8 @@ class Camera:
             self.cam.set_controls({"AfMode": libcamera.controls.AfModeEnum.Auto})
 
     def set_focus_area(self, x, y, width=64, height=64):
+        if 'AfState' not in self.state:
+            return
         self.ui.af_pos.set((x, y))
         sw = self.state["ScalerCrop"][2]
         sh = self.state["ScalerCrop"][3]
@@ -214,7 +219,7 @@ class Camera:
         y += self.state["ScalerCrop"][1]
         width = width / 1920 * sw
         height = height / 1080 * sh
-        win = [(int(x-(width/2)), int(y-(height/2)), int(width), int(height))]
+        win = [(int(x - (width / 2)), int(y - (height / 2)), int(width), int(height))]
         self.cam.set_controls({"AfWindows": win, "AfMetering": libcamera.controls.AfMeteringEnum.Windows})
         if self.ui.af.value == "S":
             self.trigger_autofocus()
@@ -285,7 +290,7 @@ class Camera:
                 hist = cv2.calcHist([grey], [0], None, [256], [0, 255])
                 cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX)
                 hist = np.int32(np.around(hist))
-                h = np.full((100, 256, 4), dtype=np.uint8, fill_value=(0,0,0,160))
+                h = np.full((100, 256, 4), dtype=np.uint8, fill_value=(0, 0, 0, 160))
                 for x, y in enumerate(hist):
                     cv2.line(h, (x, 0), (x, y[0]), (255, 255, 255, 255), 1)
                 y = np.flipud(h)
