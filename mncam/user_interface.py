@@ -285,6 +285,8 @@ class UI:
                 self.af.set("S")
             elif state["AfState"] == 2:
                 self.af.set("C")
+        else:
+            self.af.set("")
 
         if self.ae.once("update_state"):
             self.screens["main"]["gain"].color_text = (128, 128, 128, 255) if self.ae.value else (255, 255, 255, 255)

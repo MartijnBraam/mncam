@@ -222,7 +222,7 @@ class Guides(Widget):
             ctx.line((old, 64, old, height - 65), (128, 128, 128, 128), width=w)
             ctx.line((width - old, 64, width - old, height - 65), (128, 128, 128, 128), width=w)
 
-        if self.af_state.value != "M":
+        if self.af_state.value != "M" and self.af_state.value != "":
             afx = width * self.af_pos.value[0]
             afy = height * self.af_pos.value[1]
             ctx.rectangle((afx-32, afy-32, afx+32, afy+32), fill=None, outline=(255, 255, 255, 255), width=w)
