@@ -119,16 +119,22 @@ class Camera:
         self.out_dsi.overlay_position(self.OVERLAY_HISTOGRAM, 64, self.config.monitor.mode[1] - 200, 256, 100)
         self.out_hdmi.overlay_opacity(0, 0.0)
 
+        # Load calibration for WB data
+        sensor_model = self.cam.camera_properties["Model"]
+        cal_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration")
+        self.cal = self.cam.load_tuning_file(f"{sensor_model}.json", dir=cal_dir)
+
         # Set initial state to keep consistency with the API
         self.cam.set_controls({"AeEnable": True, "AwbEnable": True})
         self.preview_w, self.preview_h = self.cam.stream_configuration("lores")["size"]
         self.create_mask_images()
         self.ui.start()
 
-        # Load calibration for WB data
-        sensor_model = self.cam.camera_properties["Model"]
-        cal_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "calibration")
-        self.cal = self.cam.load_tuning_file(f"{sensor_model}.json", dir=cal_dir)
+        # Change the temperature range to the one in the calibration file
+        awb = Picamera2.find_tuning_algo(self.cal, "rpi.awb")
+        self.ui.min_temp.set(awb["ct_curve"][0])
+        self.ui.max_temp.set(awb["ct_curve"][-3])
+
 
     def create_mask_images(self):
         self.mat_black = np.zeros((self.preview_h, self.preview_w), np.uint8)
