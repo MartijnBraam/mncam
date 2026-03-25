@@ -2,10 +2,11 @@ import datetime
 import math
 import os.path
 import queue
+import socket
 
 from mncam.backlight import find_backlight, get_backlight_int, set_backlight
 from mncam.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent, VBox, Slider, \
-    ToggleRow, Guides, RadioRow, MoveEvent, ReleaseEvent
+    ToggleRow, Guides, RadioRow, MoveEvent, ReleaseEvent, TextRow
 
 
 class UI:
@@ -23,6 +24,7 @@ class UI:
         self.paint_hook = None
         self.state = None
         self.overlay_state = {}
+        self.settings_tab = StateNumber("system")
 
         # Fixed info
         self.min_shutter = StateNumber(self.config.sensor.framerate)
@@ -48,7 +50,7 @@ class UI:
         self.ae = StateNumber(True)
         self.ec = StateNumber(0.0)
         self.af = StateNumber("C")
-        self.af_pos = StateNumber((0.5,0.5))
+        self.af_pos = StateNumber((0.5, 0.5))
         self.focus = StateNumber(0.0)
         self.tally = StateNumber(0)
 
@@ -203,36 +205,62 @@ class UI:
         if self.has_af.value:
             focus_panel = VBox(name="focus")
             focus_panel.add(
-                Slider("Distance", self.focus, min=self.min_focus, max=self.max_focus, handler=lambda v: self.cam.set_focus(v),
+                Slider("Distance", self.focus, min=self.min_focus, max=self.max_focus,
+                       handler=lambda v: self.cam.set_focus(v),
                        background=(0, 0, 0, 80)))
             focus_panel.add(RadioRow("Mode", self.af, options={
                 "M": "Manual",
                 "S": "Single",
                 "C": "Continuous",
             }, handler=lambda v: self.cam.set_autofocus(v),
-                                   background=(0, 0, 0, 80)))
+                                     background=(0, 0, 0, 80)))
 
             focus_panel.compute()
             l.add_widget(Layout.MIDDLE, focus_panel)
-
 
         l.on_double_tap_empty = lambda: self.cam.enable_focus_zoom(self.zoom.value == 1.0)
 
         l.compute()
 
+    def get_ip(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return str(ip)
+
+    def get_sensor(self):
+        props = self.cam.cam.camera_properties
+        sensor = props["Model"]
+        if sensor.startswith("imx"):
+            sensor = sensor.upper()
+        return sensor
+
     def _create_settings_layout(self):
         l: Layout = self.screens["settings"]
+
+        l.add_button(Layout.TOPLEFT, 100, "System", self.settings_tab, lambda v: self.settings_tab.set("system"),
+                     state_cmp=lambda s: s == "system")
+        l.add_button(Layout.TOPLEFT, 100, "Info", self.settings_tab, lambda v: self.settings_tab.set("info"),
+                     state_cmp=lambda s: s == "info")
 
         l.add_button(Layout.TOPRIGHT, 64, "\uf013", StateNumber(False),
                      lambda v: self.open_settings(False))
 
-        page1 = VBox(name="")
+        page1 = VBox(name="system")
         page1.add(
             Slider("Backlight", self.backlight, handler=lambda v: self.set_backlight(v),
                    min=self.min_backlight, max=self.max_backlight))
         l.add_widget(Layout.MIDDLE, page1)
         page1.compute()
 
+        page2 = VBox(name="info")
+        page2.add(TextRow("Sensor", StateNumber(self.get_sensor()), None, text_width=130))
+        page2.add(TextRow("IP Address", StateNumber(self.get_ip()), None, text_width=130))
+        l.add_widget(Layout.MIDDLE, page2)
+        page2.compute()
+
+        l.page_state = self.settings_tab
         l.compute()
 
     def cycle_guides(self):

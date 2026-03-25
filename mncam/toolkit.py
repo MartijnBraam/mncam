@@ -388,6 +388,54 @@ class RadioRow(Widget):
             print("Button pressed, but no handler")
 
 
+class TextRow(Widget):
+    FONT = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 26)
+
+    def __init__(self, text, state, handler, background=None, text_width=None, state_cmp=None):
+        super().__init__()
+        self.hexpand = True
+        self.text = text
+        self.state = state
+        self.state_cmp = state_cmp
+        self.handler = handler
+        self.height = 64
+        self.color_clear = background
+        self.text_width = text_width
+        self._regions = []
+
+    def render(self, ctx):
+        if not self.state.once(self) and not self._dirty.once():
+            return
+        self._clear(ctx)
+        ctx.text((self.x + 10, self.y + 16), str(self.text), font=self.FONT, stroke_fill=(0, 0, 0, 255),
+                 stroke_width=1)
+        if self.text_width is None:
+            _, _, w, _ = ctx.textbbox((0, 0), str(self.text), font=self.FONT)
+            self.text_width = w + 10
+
+        if self.state_cmp is not None:
+            active = self.state_cmp(self.state.value)
+        else:
+            active = self.state.value
+
+        hpad = 24
+        offset = self.x + self.text_width + 10
+        ctx.text((offset + hpad, self.y + 16), str(self.state.value), font=self.FONT, fill=(128, 128, 128, 255),
+                 stroke_fill=(0, 0, 0, 255), stroke_width=1)
+
+    def tap(self, x, y):
+        for start, end, key in self._regions:
+            if start <= x < end:
+                val = key
+                break
+        else:
+            return
+        if self.handler is not None:
+            self.handler(val)
+        else:
+            print("Button pressed, but no handler")
+
+
 class Slider(Widget):
     FONT = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 26)
 
@@ -574,8 +622,8 @@ class Layout:
         for i in range(7):
             self.widgets[i] = []
 
-    def add_button(self, attach, width, text, state, handler):
-        self.widgets[attach].append(Button(width, text, state, handler))
+    def add_button(self, attach, width, text, state, handler, state_cmp=None):
+        self.widgets[attach].append(Button(width, text, state, handler, state_cmp=state_cmp))
 
     def add_label(self, attach, width, text, format, state, handler, align=None, button_state=None, state_cmp=None,
                   name=None):
@@ -739,7 +787,6 @@ def _input_thread(path, queue, config):
                 time_since_last = time.monotonic() - last_t
                 dist = abs(pos[0] - last_tap_x) + abs(pos[1] - last_tap_y)
                 if time_since_last < 0.3 and dist < 40:
-                    print("DIST", dist)
                     queue.put(DoubleTapEvent(pos[0], pos[1]))
                 else:
                     queue.put(TapEvent(pos[0], pos[1]))
