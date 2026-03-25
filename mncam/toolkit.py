@@ -198,7 +198,8 @@ class Guides(Widget):
             ctx.line((x1, y2, x2, y2), (128, 128, 128, 128), width=w)
 
     def render(self, ctx):
-        if not self.state.once(self) and not self._dirty.once() and not self.af_state.once(self) and not self.af_pos.once(self):
+        if not self.state.once(self) and not self._dirty.once() and not self.af_state.once(
+                self) and not self.af_pos.once(self):
             return
         width = self.layout_width
         height = self.layout_height
@@ -225,11 +226,12 @@ class Guides(Widget):
         if self.af_state.value != "M" and self.af_state.value != "":
             afx = width * self.af_pos.value[0]
             afy = height * self.af_pos.value[1]
-            ctx.rectangle((afx-32, afy-32, afx+32, afy+32), fill=None, outline=(255, 255, 255, 255), width=w)
+            ctx.rectangle((afx - 32, afy - 32, afx + 32, afy + 32), fill=None, outline=(255, 255, 255, 255), width=w)
 
     def tap(self, x, y):
         if self.handler is not None:
-            self.handler(x/self.layout_width, (y+self.y)/self.layout_height)
+            self.handler(x / self.layout_width, (y + self.y) / self.layout_height)
+
 
 class Label(Button):
     FONT = ImageFont.truetype("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 26)
@@ -718,6 +720,8 @@ def _input_thread(path, queue, config):
     device = evdev.InputDevice(path)
     last_x = 0
     last_y = 0
+    last_tap_x = 0
+    last_tap_y = 0
     last_t = time.monotonic()
     for event in device.read_loop():
         # print(evdev.categorize(event))
@@ -733,11 +737,15 @@ def _input_thread(path, queue, config):
             if event.value == 1:
                 # Touch down
                 time_since_last = time.monotonic() - last_t
-                if time_since_last < 0.5:
+                dist = abs(pos[0] - last_tap_x) + abs(pos[1] - last_tap_y)
+                if time_since_last < 0.3 and dist < 40:
+                    print("DIST", dist)
                     queue.put(DoubleTapEvent(pos[0], pos[1]))
                 else:
                     queue.put(TapEvent(pos[0], pos[1]))
-                last_t = time.monotonic()
+                    last_t = time.monotonic()
+                last_tap_x = pos[0]
+                last_tap_y = pos[1]
             else:
                 # Touch up
                 queue.put(ReleaseEvent(pos[0], pos[1]))
