@@ -22,6 +22,7 @@ class UI:
         self.active_screen = "main"
         self.paint_hook = None
         self.state = None
+        self.overlay_state = {}
 
         # Fixed info
         self.min_shutter = StateNumber(self.config.sensor.framerate)
@@ -298,8 +299,18 @@ class UI:
             self.paint_hook(buf)
 
     def switch_screen(self, name):
+        if self.active_screen == "main" and name != "main":
+            # Save overlay state
+            self.overlay_state = {
+                'histogram': self.histogram.value,
+            }
         self.active_screen = name
         self.screens[self.active_screen].dirty = True
+
+        if name == "main":
+            self.cam.enable_histogram(self.overlay_state["histogram"])
+        else:
+            self.cam.enable_histogram(False)
 
     def open_settings(self, state):
         if state:
