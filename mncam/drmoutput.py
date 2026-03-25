@@ -76,7 +76,7 @@ class Connector:
         self.overlay[idx].set_prop("alpha", val)
 
     def overlay_exists(self, idx):
-        return idx in self.overlay
+        return idx < len(self.overlay)
 
     def set_fps(self, fps):
         mode = self._conn.get_default_mode()
