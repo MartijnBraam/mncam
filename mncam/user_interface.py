@@ -40,14 +40,20 @@ class UI:
             ctrl_min, ctrl_max, ctrl_default = limits["LensPosition"]
             self.min_focus = StateNumber(ctrl_min)
             self.max_focus = StateNumber(ctrl_max)
+        ctrl_min, ctrl_max, ctrl_default = limits["ColourTemperature"]
+        self.min_temp = StateNumber(ctrl_min)
+        self.max_temp = StateNumber(ctrl_max)
 
         # Camera state
         self.fps = StateNumber(self.config.sensor.framerate)
         self.shutter = StateNumber()
         self.gain = StateNumber()
+        self.temperature = StateNumber()
         self.tc = StateNumber()
         self.camera_id = StateNumber()
         self.ae = StateNumber(True)
+        self.awb = StateNumber(True)
+        self.awbmode = StateNumber("auto")
         self.ec = StateNumber(0.0)
         self.af = StateNumber("C")
         self.af_pos = StateNumber((0.5, 0.5))
@@ -144,6 +150,10 @@ class UI:
                         handler=lambda v: self.tab_state.toggle("focus"),
                         button_state=self.tab_state, state_cmp=lambda s: s == "focus")
 
+        l.add_label(Layout.TOPRIGHT, 100, "Balance", "{}k", self.temperature, align="left", name="wb",
+                    handler=lambda v: self.tab_state.toggle("wb"),
+                    button_state=self.tab_state, state_cmp=lambda s: s == "wb")
+
         l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
         l.add_button(Layout.TOPRIGHT, 64, "\uf013", StateNumber(False),
                      lambda v: self.open_settings(True))
@@ -200,6 +210,27 @@ class UI:
                                background=(0, 0, 0, 80)))
         ae_panel.compute()
         l.add_widget(Layout.MIDDLE, ae_panel)
+
+        # Whitebalance control panel
+        wb_panel = VBox(name="wb")
+        wb_panel.add(
+            Slider("Temperature", self.temperature, min=self.min_temp, max=self.max_temp,
+                   handler=lambda v: self.cam.set_whitebalance(v),
+                   background=(0, 0, 0, 80)))
+        wb_panel.add(ToggleRow("Auto Whitebalance", self.awb, handler=lambda v: self.cam.enable_auto_whitebalance(v),
+                               background=(0, 0, 0, 80)))
+        wb_panel.add(RadioRow("Mode", self.awbmode, options={
+            "auto": "Auto",
+            "tungsten": "Tungsten",
+            "fluorescent": "Fluorescent",
+            "indoor": "Indoor",
+            "daylight": "Daylight",
+            "cloudy": "Cloudy",
+        }, handler=lambda v: self.cam.set_awb_mode(v),
+                              background=(0, 0, 0, 80)))
+
+        wb_panel.compute()
+        l.add_widget(Layout.MIDDLE, wb_panel)
 
         # Focus control panel
         if self.has_af.value:
@@ -305,6 +336,7 @@ class UI:
         self.tc.set(tc.strftime("%H:%M:%S"))
         self.shutter.set(int(1000000 / state["ExposureTime"]))
         self.gain.set(int(round(10 * math.log10(state["AnalogueGain"]))))
+        self.temperature.set(state["ColourTemperature"])
         if "LensPosition" in state:
             self.focus.set(state["LensPosition"])
         if "AfState" in state:

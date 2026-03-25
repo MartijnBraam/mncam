@@ -182,6 +182,10 @@ class Camera:
         self.ui.ae.set(enabled)
         self.cam.set_controls({"AeEnable": enabled})
 
+    def enable_auto_whitebalance(self, enabled):
+        self.ui.awb.set(enabled)
+        self.cam.set_controls({"AwbEnable": enabled})
+
     def set_ev(self, compensation):
         self.ui.ec.set(compensation)
         self.cam.set_controls({"ExposureValue": compensation})
@@ -194,6 +198,24 @@ class Camera:
     def set_focus(self, distance):
         self.ui.focus.set(distance)
         self.cam.set_controls({"LensPosition": distance})
+
+    def set_awb_mode(self, mode):
+        self.ui.awbmode.set(mode)
+        if mode == "auto":
+            self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Auto})
+        elif mode == "tungsten":
+            self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Tungsten})
+        elif mode == "fluorescent":
+            self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Fluorescent})
+        elif mode == "indoor":
+            self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Indoor})
+        elif mode == "daylight":
+            self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Daylight})
+        elif mode == "cloudy":
+            self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Cloudy})
+
+    def set_whitebalance(self, temperature):
+        pass
 
     def set_autofocus(self, mode):
         if 'AfState' not in self.state:

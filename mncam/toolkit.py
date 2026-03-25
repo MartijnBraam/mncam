@@ -340,7 +340,7 @@ class RadioRow(Widget):
         self.state_cmp = state_cmp
         self.handler = handler
         self.height = 64
-        self.color_clear = background
+        self.color_background = background
         self.text_width = text_width
         self._regions = []
 
