@@ -395,8 +395,10 @@ class UI:
 
         if name == "main":
             self.cam.enable_histogram(self.overlay_state["histogram"])
+            self.cam.move_vu(False)
         else:
             self.cam.enable_histogram(False)
+            self.cam.move_vu(True)
 
     def open_settings(self, state):
         if state:

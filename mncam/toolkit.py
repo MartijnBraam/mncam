@@ -486,11 +486,12 @@ class Slider(Widget):
                        slide_start + pos,
                        vcenter + self.thickness,
                        ), fill=bc)
-        ctx.rectangle((slide_start + pos,
-                       vcenter - self.thickness,
-                       self.x2 - 10,
-                       vcenter + self.thickness,
-                       ), fill=self.color_bar)
+        if slide_start+pos < self.x2 - 10:
+            ctx.rectangle((slide_start + pos,
+                           vcenter - self.thickness,
+                           self.x2 - 10,
+                           vcenter + self.thickness,
+                           ), fill=self.color_bar)
 
         ctx.ellipse((slide_start + pos - self.radius,
                      vcenter - self.radius,

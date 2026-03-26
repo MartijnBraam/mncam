@@ -1,7 +1,11 @@
+import math
 import os.path
+import queue
+import threading
 import time
 import cv2
 import libcamera
+from PIL import Image, ImageDraw
 
 from libcamera import ColorSpace
 from picamera2 import Picamera2, MappedArray
@@ -24,6 +28,7 @@ class Camera:
     OVERLAY_FOCUS = 2
     OVERLAY_UI = 3
     OVERLAY_HISTOGRAM = 4
+    OVERLAY_AUDIO = 5
 
     def __init__(self):
         self.cam = Picamera2()
@@ -61,7 +66,7 @@ class Camera:
         self.drm = DRMOutput(self.config.output.mode[0], self.config.output.mode[1])
         self.out_hdmi = self.drm.use_output(self.output_hdmi, self.config.output.mode[0], self.config.output.mode[1],
                                             self.config.output.framerate, 1)
-        self.out_dsi = self.drm.use_output(self.output_ui, self.ui_size[0], self.ui_size[1], None, 5)
+        self.out_dsi = self.drm.use_output(self.output_ui, self.ui_size[0], self.ui_size[1], None, 6)
 
         # Configure the hardware H.264 encoder
         if self.config.encoder.enabled:
@@ -84,6 +89,8 @@ class Camera:
         self.thresh_under = 18
 
         self.audio = AudioManager(self.config)
+        self.levels = queue.Queue()
+        self.vu = Image.new("RGBA", (512, 32), "black")
 
         self.cal = {}
         self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls)
@@ -120,6 +127,7 @@ class Camera:
 
         self.out_hdmi.overlay_position(0, 0, 0, self.config.output.mode[0], 64)
         self.out_dsi.overlay_position(self.OVERLAY_HISTOGRAM, 64, self.config.monitor.mode[1] - 200, 256, 100)
+        self.move_vu(False)
         self.out_hdmi.overlay_opacity(0, 0.0)
 
         # Load calibration for WB data
@@ -133,11 +141,22 @@ class Camera:
         self.create_mask_images()
         self.ui.start()
 
+        audio_thread = threading.Thread(target=self.audio.start_loop, args=(self.levels,))
+        audio_thread.daemon = True
+        audio_thread.start()
+
         # Change the temperature range to the one in the calibration file
         awb = Picamera2.find_tuning_algo(self.cal, "rpi.awb")
         self.ui.min_temp.set(awb["ct_curve"][0])
         self.ui.max_temp.set(awb["ct_curve"][-3])
 
+    def move_vu(self, in_settings):
+        if not in_settings:
+            self.out_dsi.overlay_position(self.OVERLAY_AUDIO, self.config.monitor.mode[0] - 256 - 64,
+                                          self.config.monitor.mode[1] - 128, 256, 32)
+        else:
+            self.out_dsi.overlay_position(self.OVERLAY_AUDIO, int(self.config.monitor.mode[0] / 2) - 256,
+                                          self.config.monitor.mode[1] - 48, 512, 32)
 
     def create_mask_images(self):
         self.mat_black = np.zeros((self.preview_h, self.preview_w), np.uint8)
@@ -149,20 +168,58 @@ class Camera:
         for offset in range(0, self.preview_w, 10):
             cv2.line(self.mat_zebra, (offset, 0), (offset, self.preview_h), (0, 0, 0), 3)
 
+    def draw_audio(self):
+        if self.levels.empty():
+            return
+
+        data = None
+        while not self.levels.empty():
+            frame = self.levels.get()
+            if data is None:
+                data = list(frame)
+            for i, v in enumerate(frame):
+                data[i] = max(data[i], v)
+
+        width, height = self.vu.size
+
+        thresh_yellow = 0.5
+        off_yellow = int(width * thresh_yellow) + 1
+        thresh_red = 0.8
+        off_red = int(width * thresh_red) + 1
+
+        ctx = ImageDraw.Draw(self.vu)
+        ctx.rectangle((0, 0, width, height), fill=(10, 10, 10, 128))
+        bh = (height - 2) / len(data)
+        for i, chan in enumerate(data):
+            norm = chan / 16446
+            dB = 10 * math.log(norm)
+            # TODO: Better curve fitting
+            y = max(0.0, 1 + 0.03 * dB)
+            val = int(y * (width - 2))
+            ctx.rectangle((1, 1 + bh * i, min(val + 1, off_yellow), 1 + bh * (i + 1)), fill=(128, 255, 0, 255))
+            if val > off_yellow:
+                ctx.rectangle((off_yellow, 1 + bh * i, min(val + 1, off_red), 1 + bh * (i + 1)),
+                              fill=(255, 255, 0, 255))
+            if val > off_red:
+                ctx.rectangle((off_red, 1 + bh * i, min(val + 1, width), 1 + bh * (i + 1)), fill=(255, 0, 0, 255))
+        self.drm.set_overlay(self.vu, output=self.output_ui, num=self.OVERLAY_AUDIO)
+
     def loop(self):
+        start = time.time()
         self.state = self.cam.capture_metadata()
         self.api.update_state(self.cam.capture_metadata())
         self.api.do_work()
         self.ui.update_state(self.cam.capture_metadata())
         self.ui_hdmi.update_state(self.cam.capture_metadata())
+        self.draw_audio()
 
-        if self.debounce > 10:
+        if self.debounce > 60:
             self.debounce = 0
             self.edid = check_edid()
             self.ui.camera_id.set(self.edid.camera_id)
             self.ui_hdmi.camera_id.set(self.edid.camera_id)
         self.debounce += 1
-        time.sleep(0.1)
+        time.sleep(max(1.0 / 30 - (time.time() - start), 0))
 
     def set_controls(self, **kwargs):
         self.cam.set_controls(kwargs)
