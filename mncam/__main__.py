@@ -10,6 +10,7 @@ from picamera2.outputs import PyavOutput
 import numpy as np
 
 from mncam.api import ControlAPI
+from mncam.audio import AudioManager
 from mncam.config import Config
 from mncam.drmoutput import DRMOutput
 from mncam.edid import check_edid
@@ -81,6 +82,8 @@ class Camera:
 
         self.thresh_zebra = 230
         self.thresh_under = 18
+
+        self.audio = AudioManager(self.config)
 
         self.cal = {}
         self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls)

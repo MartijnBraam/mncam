@@ -57,6 +57,16 @@ class SensorConfig:
             return libcamera.controls.draft.NoiseReductionModeEnum.Off
 
 
+class AudioConfig:
+    def __init__(self):
+        self.input_device = 'sndrpihifiberry'
+        self.output_device = 'vc4hdmi0'
+        self.left_source = 'XLR1'
+        self.right_source = 'XLR2'
+        self.left_gain = 0
+        self.right_gain = 0
+
+
 class Config:
     def __init__(self, path):
         self._path = path
@@ -65,6 +75,7 @@ class Config:
         self.output = OutputConfig()
         self.encoder = EncoderConfig()
         self.sensor = SensorConfig()
+        self.audio = AudioConfig()
 
         self.load_defaults()
         if os.path.isfile(path):
@@ -115,7 +126,7 @@ class Config:
             self.sensor.framerate = min(30, self.sensor.framerate)
 
     def save_config(self):
-        sections = ["sensor", "output", "monitor", "encoder"]
+        sections = ["sensor", "output", "monitor", "encoder", "audio"]
         parser = configparser.ConfigParser()
         for section in sections:
             parser.add_section(section)

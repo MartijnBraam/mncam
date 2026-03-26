@@ -68,6 +68,12 @@ class UI:
         self.guides = StateNumber("thirds")
         self.zoom = StateNumber(1.0)
 
+        # Audio state
+        self.audio_gain_left = StateNumber(self.config.audio.left_gain)
+        self.audio_gain_right = StateNumber(self.config.audio.right_gain)
+        self.audio_gain_min = StateNumber(self.cam.audio.get_min_gain())
+        self.audio_gain_max = StateNumber(self.cam.audio.get_max_gain())
+
         # HDMI overlay state
         self.hdmi_overlay = StateNumber(False)
 
@@ -267,11 +273,20 @@ class UI:
             sensor = sensor.upper()
         return sensor
 
+    def _set_audio_gain(self, chan, val):
+        self.cam.audio.set_gain(chan, val)
+        if chan == 'L':
+            self.audio_gain_left.set(val)
+        else:
+            self.audio_gain_right.set(val)
+
     def _create_settings_layout(self):
         l: Layout = self.screens["settings"]
 
         l.add_button(Layout.TOPLEFT, 100, "System", self.settings_tab, lambda v: self.settings_tab.set("system"),
                      state_cmp=lambda s: s == "system")
+        l.add_button(Layout.TOPLEFT, 100, "Audio", self.settings_tab, lambda v: self.settings_tab.set("audio"),
+                     state_cmp=lambda s: s == "audio")
         l.add_button(Layout.TOPLEFT, 100, "Info", self.settings_tab, lambda v: self.settings_tab.set("info"),
                      state_cmp=lambda s: s == "info")
 
@@ -284,6 +299,17 @@ class UI:
                    min=self.min_backlight, max=self.max_backlight))
         l.add_widget(Layout.MIDDLE, page1)
         page1.compute()
+
+        page3 = VBox(name="audio")
+        page3.add(
+            Slider("Left gain", self.audio_gain_left, handler=lambda v: self._set_audio_gain('L', v),
+                   min=self.audio_gain_min, max=self.audio_gain_max))
+        page3.add(
+            Slider("Right gain", self.audio_gain_right, handler=lambda v: self._set_audio_gain('R', v),
+                   min=self.audio_gain_min, max=self.audio_gain_max))
+
+        l.add_widget(Layout.MIDDLE, page3)
+        page3.compute()
 
         page2 = VBox(name="info")
         page2.add(TextRow("Sensor", StateNumber(self.get_sensor()), None, text_width=130))
