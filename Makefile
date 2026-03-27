@@ -2,7 +2,7 @@ SRCFILES := $(shell find . -iname *.go -type f -print)
 PREFIX := /usr/local
 
 .PHONY: all
-all: mncam_api
+all: mncam_api overlays driver
 
 .PHONY: overlays
 overlays: overlay/mncam-proto3.dtbo

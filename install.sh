@@ -50,10 +50,11 @@ if [ "$1" == "image" ]; then
 fi
 
 msg "Installing dependencies available in Debian Trixie"
-debian python3-opencv python3-evdev python3-picamera2 python3-pil python3-humanfriendly fonts-liberation haproxy golang wget
+debian python3-opencv python3-evdev python3-picamera2 python3-pil python3-humanfriendly python3-alsaaudio fonts-liberation fonts-font-awesome haproxy golang wget
 
-msg "Build the API server..."
+msg "Build the API server and drivers..."
 make all
+make install-overlays install-driver
 
 msg "Installing MediaMTX..."
 if [ ! -x /usr/local/bin/mediamtx ]; then
