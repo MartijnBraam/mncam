@@ -28,25 +28,13 @@
 		};
 	};
 
-    fragment@2 {
-        target = <&sound>;
-        __overlay__ {
-            compatible = "simple-audio-card";
-            i2s-controller = <&i2s_clk_producer>;
-            simple-audio-card,name = "mncam";
-            simple-audio-card,format = "i2s";
-
-            status = "okay";
-
-            simple-audio-card,cpu {
-                sound-dai = <&i2s>;
-                dai-tdm-slot-num = <2>;
-                dai-tdm-slot-width = <32>;
-            };
-
-            simple-audio-card,codec {
-                sound-dai = <&mncam_adc>;
-            };
-        };
-    };
+	fragment@2 {
+		target = <&sound>;
+		hifiberry_adc: __overlay__ {
+			compatible = "fosdem,mncam-adc";
+			audio-codec = <&mncam_adc>;
+			i2s-controller = <&i2s_clk_producer>;
+			status = "okay";
+		};
+	};
 };

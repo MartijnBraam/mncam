@@ -192,7 +192,7 @@ class Camera:
         bh = (height - 2) / len(data)
         for i, chan in enumerate(data):
             norm = chan / 16446
-            dB = 10 * math.log(norm)
+            dB = 10 * math.log(norm+0.00001)
             # TODO: Better curve fitting
             y = max(0.0, 1 + 0.03 * dB)
             val = int(y * (width - 2))

@@ -18,21 +18,24 @@ class AudioManager:
         input_idx = cards.index(config.audio.input_device)
         output_idx = cards.index(config.audio.output_device)
 
-        controls = alsaaudio.mixers(1)
         self._pga = alsaaudio.Mixer(cardindex=input_idx, control='ADC')
+        self._left_mux = alsaaudio.Mixer(cardindex=input_idx, control='ADC Left Input')
+        self._right_mux = alsaaudio.Mixer(cardindex=input_idx, control='ADC Right Input')
         self.audio_enabled = True
 
         self.set_gain('L', config.audio.left_gain)
         self.set_gain('R', config.audio.right_gain)
+        self.set_route('L', config.audio.left_source)
+        self.set_route('R', config.audio.right_source)
 
     def set_gain(self, channel, gain):
         if not self.audio_enabled:
             return
         if channel == 'L':
-            self._pga.setvolume(volume=int(gain*100), channel=0, units=alsaaudio.VOLUME_UNITS_DB)
+            self._pga.setvolume(volume=int(gain * 100), channel=0, units=alsaaudio.VOLUME_UNITS_DB)
             self._config.audio.left_gain = int(gain)
         else:
-            self._pga.setvolume(volume=int(gain*100), channel=1, units=alsaaudio.VOLUME_UNITS_DB)
+            self._pga.setvolume(volume=int(gain * 100), channel=1, units=alsaaudio.VOLUME_UNITS_DB)
             self._config.audio.right_gain = int(gain)
         self._config.save_config()
 
@@ -42,8 +45,23 @@ class AudioManager:
     def get_max_gain(self):
         return 40
 
-    def set_routing(self, channel, source):
-        pass
+    def get_routes(self, channel):
+        mux = self._left_mux
+        if channel == 'R':
+            mux = self._right_mux
+        current, options = mux.getenum()
+        return options
+
+    def set_route(self, channel, source):
+        mux = self._left_mux
+        if channel == 'R':
+            mux = self._right_mux
+        current, options = mux.getenum()
+        if source not in options:
+            print("Invalid mux source: " + source)
+            return
+        item = options.index(source)
+        mux.setenum(item)
 
     def start_loop(self, q):
         cmd = ["alsaloop-fosdem", "-C", f"hw:CARD={self._config.audio.input_device},DEV=0", "-P",

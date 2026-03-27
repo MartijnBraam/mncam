@@ -59,10 +59,10 @@ class SensorConfig:
 
 class AudioConfig:
     def __init__(self):
-        self.input_device = 'sndrpihifiberry'
+        self.input_device = 'sndmncamadc'
         self.output_device = 'vc4hdmi0'
-        self.left_source = 'XLR1'
-        self.right_source = 'XLR2'
+        self.left_source = 'XLR1 [DIFF]'
+        self.right_source = 'XLR2 [DIFF]'
         self.left_gain = 0
         self.right_gain = 0
 
