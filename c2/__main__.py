@@ -20,8 +20,10 @@ from c2.config import Config
 from c2.drmoutput import DRMOutput
 from c2.edid import check_edid
 from c2.gamma import open_isp, generate_curve, set_isp_gamma
+from c2.omt_output import OMTOutput
 
 from c2.user_interface import UI
+from c2.vmx_encoder import VMXEncoder
 
 
 class Camera:
@@ -84,6 +86,10 @@ class Camera:
             self.stream = PyavOutput("rtsp://127.0.0.1:8554/cam", format="rtsp")
             self.encoder.output = self.stream
 
+        self.vmx = VMXEncoder()
+        self.omt = OMTOutput()
+        self.vmx.output = self.omt
+
         def preview(request):
             self.update_preview(request)
 
@@ -142,6 +148,7 @@ class Camera:
         self.cam.start()
         if self.config.encoder.enabled:
             self.cam.start_encoder(self.encoder)
+        self.cam.start_encoder(self.vmx)
 
         for i in range(100):
             time.sleep(0.1)
