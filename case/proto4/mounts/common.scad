@@ -53,7 +53,7 @@ module mount_sensor() {
     }
 }
 
-module cam4_mount(hole=40, hfn=4, mft_pin=false) {
+module cam4_mount(hole=40, hfn=4, mft_pin=false, sensor_mount=true) {
     size=62;
     screw_spacing=52;
     difference() {
@@ -70,7 +70,6 @@ module cam4_mount(hole=40, hfn=4, mft_pin=false) {
                     screwhole(2.5, 5, 8, 2);
                 translate([-screw_spacing/2, -screw_spacing/2, 0])
                     screwhole(2.5, 5, 8, 2);
-                
 
                 children();
 
@@ -86,7 +85,9 @@ module cam4_mount(hole=40, hfn=4, mft_pin=false) {
             }
             children();
         }
-        mount_sensor();
+        if(sensor_mount) {
+            mount_sensor();
+        }
     }
 
     if($preview) {

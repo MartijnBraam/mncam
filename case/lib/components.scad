@@ -38,6 +38,26 @@ module ccube(pos) {
         cube(pos, center=true);
 }
 
+module corners(width, height, center=false) {
+    translate([center ? -width/2 : 0, center ? -height/2 : 0]) {
+        children();
+
+        translate([width,0,0])
+        rotate([0, 0, 90])
+            children();
+        
+        translate([width,height,0])
+                rotate([0, 0, 180])
+
+            children();
+        translate([0,height,0])
+                rotate([0, 0, 270])
+
+            children();
+        
+    }
+}
+
 module shell(size, radius, wall=0, center=true) {
     translate([center ? 0 : size.x/2, center ? 0 : size.y/2])
     linear_extrude(size.z, convexity=11)

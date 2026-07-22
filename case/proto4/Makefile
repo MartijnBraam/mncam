@@ -2,7 +2,7 @@
 all: box case mounts panels
 
 .PHONY: mounts
-mounts: mounts/p4_imx290.stl mounts/p4_mft.stl mounts/p4_cmount.stl
+mounts: mounts/p4_imx290.stl mounts/p4_mft.stl mounts/p4_cmount.stl mounts/p4_pi_hq.stl
 
 .PHONY: box
 box: box_bottom.stl box_top.stl
