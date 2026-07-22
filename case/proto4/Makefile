@@ -8,7 +8,7 @@ mounts: mounts/p4_imx290.stl mounts/p4_mft.stl mounts/p4_cmount.stl mounts/p4_pi
 box: box_bottom.stl box_top.stl
 
 .PHONY: panels
-panels: panels/blank.stl panels/blank_short.stl panels/waveshare_5inch.stl panels/rear_io.stl panels/sensor.stl panels/cheese.stl
+panels: panels/blank.stl panels/blank_short.stl panels/waveshare_5inch.stl panels/rear_io_6d.stl panels/sensor.stl panels/cheese.stl
 
 .PHONY: case
 PROTO4_TARGETS=$(shell sed '/^module [a-z0-9_-]*().*make..\?me.*$$/!d;s/module //;s/().*/.stl/' case_proto4.scad)

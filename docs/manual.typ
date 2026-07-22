@@ -69,12 +69,12 @@ don't allow the zero copy video output directly from the camera on it.
 - Raspberry Pi 4 Model B
 - SD card for the Raspberry Pi
 - Waveshare 5inch 1024x600 DSI touch display (#link("https://www.waveshare.com/5inch-dsi-lcd-c.htm")[5inch-dsi-lcd-c])
-- Threaded metal inserts for putting screws in the 3D prints. Most of the design uses M2.5x4x4 inserts.
-- M2.5 screws. For the Proto4 design the Waveshare display comes with enough of them. For the Boxcam design more need to be ordered.
+- Threaded metal inserts for putting bolts in the 3D prints. Most of the design uses M2.5x4x4 inserts.
+- M2.5 bolts. For the Proto4 design the Waveshare display comes with enough of them. For the Boxcam design more need to be ordered.
 
 #note[
   Sizes of threaded metal heat-inserts are specified in #text(gray)[size]x#text(gray)[depth]x#text(gray)[outer-diameter] format. For example
-  an M2.5x5x4 is an insert for an M2.5 sized screw that fits in a hole that's 5mm deep and 4mm in diameter.
+  an M2.5x5x4 is an insert for an M2.5 sized bolt that fits in a hole that's 5mm deep and 4mm in diameter.
 ]
 
 == Sensors and lenses
@@ -90,7 +90,7 @@ This is the easiest sensor to get and combines well with C-mount lenses.
 - Raspberry Pi HQ sensor (#link("https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/")[at raspberrypi.com])
 
 This sensor has a pretty nice metal C-mount attached to it so for this specific case there's a seperate mount that integrates
-the sensor and lens mount. For this print `p4_pi_hq.stl` and order 4x M2.5x4x4 inserts and 4 M2.5 screws.
+the sensor and lens mount. For this print `p4_pi_hq.stl` and order 4x M2.5x4x4 inserts and 4 M2.5 bolts.
 
 === Waveshare IMX290/IMX462
 
@@ -105,7 +105,7 @@ of the connector instead of behind it.
 - #link("https://www.waveshare.com/imx290-83-ir-cut-camera.htm")[Waveshare IMX290-83 IR-CUT]
 - #link("https://www.waveshare.com/imx462-ir-cut-camera-a.htm")[Waveshare IMX462 IR-CUT Camera (A)]
 
-For these sensors print the `p4_imx290.stl` file and order 4x M2.5x4x4 inserts and 4 M2.5 screws.
+For these sensors print the `p4_imx290.stl` file and order 4x M2.5x4x4 inserts and 4 M2.5 bolts.
 
 === C-mount lenses
 
@@ -115,7 +115,7 @@ rebranded from many manufacturers.
 
 - 8-50mm C-mount lens (#link("https://www.waveshare.com/product/raspberry-pi/cameras/10mp-pixels/8-50mm-zoom-lens-for-pi.htm")[available at Waveshare])
 
-For this lens mount you need to print `p4_cmount.stl` and this print takes 4 M2.5x4x4 inserts. 4 M2.5 screws are needed
+For this lens mount you need to print `p4_cmount.stl` and this print takes 4 M2.5x4x4 inserts. 4 M2.5 bolts are needed
 to mount the sensor to the lens mount.
 
 === MFT lenses
@@ -133,7 +133,7 @@ the lens side of these adapters and keep the metal ring that holds the ring, the
 is below it and the 4 screws that mounts them to the case.
 
 For this lens mount you need to print `p4_mft.stl` and mount the MFT extension tube parts to that. Then 4
-M2.5x4x4 inserts and M2.5 screws are used for mounting the sensor to the lens mount.
+M2.5x4x4 inserts and M2.5 bolts are used for mounting the sensor to the lens mount.
 
 == The BoxCam
 #align(center)[#image("box-exploded.png")]
@@ -149,10 +149,10 @@ mounting frame for the camera. The bottom has 3 holes for the tripod mounting in
 insert to match up with the tripod threads.
 
 - 24x M2.5x4x4 theaded metal insert
-- 24x M2.5 screw
+- 24x M2.5 bolt
 - 3x 3/8-16x7mmx8mm threaded metal insert
 
-The frame itself also needs 24 metal inserts and 4 screws. 4 inserts for every panel that can be mounted
+The frame itself also needs 24 metal inserts and 4 bolts. 4 inserts for every panel that can be mounted
 and 4 to keep the top and bottom half of the frame together.
 
 === Sensor/lens mount
@@ -162,14 +162,29 @@ one of the short sides of the box frame with four of the M2.5 screws in the part
 The lens adapter itself mounts to this panel using 4 M2.5 inserts and screws:
 
 - 4x M2.5x4x4 theaded metal insert
-- 4x M2.5 screw
+- 4x M2.5 bolt
 
 === Display
 One of the two long sides of the case are for the 5" display. For this print `panel/waveshare_5inch.scad`
 
-To display can be screwed into the panel using the screws that were included by the display itself.
+To mount the display the M2.5 bolts that are included with the display itself can be used.
 
 The panel is not completely symmetrical. The two mounting posts that are two-sided are supposed to be on
 the bottom and the Waveshare display has a tiny flex going from the touchscreen to the display PCB that
 sticks out slightly, this should also be on the bottom side.
 
+=== Rear I/O panel
+For connectivity the rear panel has space for 6 Neutrik d-series connectors. A good minimal set is
+bringing out one HDMI, the ethernet and USB-B for power and stereo XLRs for audio input.
+
+For this panel print `panel/rear_io_6d.stl` and order these parts:
+
+- 1x Neutrik NAUSB-W-B (USB-A to USB-B feedthrough)
+- 1x Neutrik NA HDMI-W-B
+- 1x Neutrik NE8FDP-B (RJ45 feedthrough, comes with screws)
+- 2x Neutrik NC3 FD-LX-B (XLR female chassis connector)
+- 8x M3x10 bolt
+- 8x M3 nut
+
+These will be connected to the Raspberry Pi that will be placed inside the camera. It's possible to
+also add an extra HDMI feedthrough to use both the HDMI outputs of the Pi for different output feeds.
