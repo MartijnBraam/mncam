@@ -1,6 +1,9 @@
 .PHONY: all
 all: box case mounts panels
 
+case.tar.gz: all
+	tar -cvzf $@ *.stl **/*.stl
+
 .PHONY: mounts
 mounts: mounts/p4_imx290.stl mounts/p4_mft.stl mounts/p4_cmount.stl mounts/p4_pi_hq.stl
 
@@ -32,3 +35,4 @@ clean:
 	rm -f mounts/*.deps
 	rm -f panels/*.stl
 	rm -f panels/*.deps
+	rm -f case.tar.gz
