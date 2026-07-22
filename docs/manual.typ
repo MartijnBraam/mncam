@@ -87,9 +87,10 @@ of the lens mounts to make a complete sensor assembly.
 
 This is the easiest sensor to get and combines well with C-mount lenses.
 
-#todo[Update IMX477 mount to cam4 modular design]
-
 - Raspberry Pi HQ sensor (#link("https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/")[at raspberrypi.com])
+
+This sensor has a pretty nice metal C-mount attached to it so for this specific case there's a seperate mount that integrates
+the sensor and lens mount. For this print `p4_pi_hq.stl` and order 4x M2.5x4x4 inserts and 4 M2.5 screws.
 
 === Waveshare IMX290/IMX462
 
