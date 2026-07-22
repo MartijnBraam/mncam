@@ -155,4 +155,21 @@ insert to match up with the tripod threads.
 The frame itself also needs 24 metal inserts and 4 screws. 4 inserts for every panel that can be mounted
 and 4 to keep the top and bottom half of the frame together.
 
+=== Sensor/lens mount
+For mounting the lens and sensor to the box camera print the `panels/sensor.stl` panel. This screws into
+one of the short sides of the box frame with four of the M2.5 screws in the part list of the frame.
+
+The lens adapter itself mounts to this panel using 4 M2.5 inserts and screws:
+
+- 4x M2.5x4x4 theaded metal insert
+- 4x M2.5 screw
+
+=== Display
+One of the two long sides of the case are for the 5" display. For this print `panel/waveshare_5inch.scad`
+
+To display can be screwed into the panel using the screws that were included by the display itself.
+
+The panel is not completely symmetrical. The two mounting posts that are two-sided are supposed to be on
+the bottom and the Waveshare display has a tiny flex going from the touchscreen to the display PCB that
+sticks out slightly, this should also be on the bottom side.
 
