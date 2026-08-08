@@ -1,5 +1,5 @@
 #import "@preview/colorful-boxes:1.4.3": colorbox
-#set document(title: [ConfCam manual])
+#set document(title: [ConfCam build manual])
 #set page(
   paper: "a4",
   header: align(right+horizon, context [#document.title - #datetime.today().display()]),
