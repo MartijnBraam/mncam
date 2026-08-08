@@ -188,3 +188,48 @@ For this panel print `panel/rear_io_6d.stl` and order these parts:
 
 These will be connected to the Raspberry Pi that will be placed inside the camera. It's possible to
 also add an extra HDMI feedthrough to use both the HDMI outputs of the Pi for different output feeds.
+
+== The Raspberry Pi
+
+Now the essential panels are installed it's possible to install the Raspberry Pi. 
+
+= Installing the software
+
+ConfCam consists of several software components running on top of Raspbian Trixie. The first step
+is to install Raspbian Trixie lite 64-bit using the normal Raspberry Pi install methods. Then clone
+the git repository for ConfCam. This contains the required software and an installation script:
+
+```
+$ git clone https://github.com/martijnbraam/c2
+$ cd c2
+$ ./install.sh
+```
+
+This should install MediaMTX and configure it. This is used for making the h264 stream available
+on the network for remote viewing on the webinterface. It also installs the `c2` python package
+itself which renders all the UI and controls the hardware.
+
+Manual adjustments are required in the Raspberry Pi boot configuration. Edit the file at
+`/boot/firmware/config.txt` and adjust it to the installed hardware:
+
+- For the Waveshare display used in this manual add `dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC`
+  to load the driver.
+- For the prototype audio board add `dtoverlay=mncam-proto3`
+- When not using a Raspberry Pi Foundation sensor, disable `camera_auto_detect` and add the overlay
+  required for the specific sensor.
+
+The first time ConfCam starts the hardware is autodetected and a configuration file is generated for it.
+This is mainly detecting wether there's a DSI panel in the camera for the UI or if HDMI is used for
+the monitoring output. If the hardware is changed or the detection is run before the Raspberry Pi
+boot config was adjusted you can remove `/boot/camera.ini` and restart the camera to re-detect the
+hardware.
+
+== The configuration file
+
+The configration for ConfCam is stored in `/boot/camera.ini`
+
+= Using the camera
+
+By default the camera will start in full-automatic mode. The controls on the top of the touchscreen
+configure all the exposure parameters for the camera.
+
