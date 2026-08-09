@@ -42,35 +42,31 @@
 }
 #show link: underline
 
-= The Conference Camera
-
 ConfCam is a modular open hardware camera for live streaming conferences.
 
 Main features:
-- video output: low latency HDMI
-- control: touchscreen & web browser
+- video output: low latency HDMI, network stream
+- control: touchscreen, web browser and ssh
 - audio input: dual XLR, dual internal mic
 - modular sensors and lenses
 
 #outline()
 
-#pagebreak()
+= Hardware setup
 
-== Hardware setup
-
-=== The lens
+== The lens
 
 The camera uses a c-mount lens by default. If yours comes without a lens, consult the ConfCam build manual on connecting one.
 
 You can adjust the lens manually to the room: zoom, aperture and focus. 
 
-=== Mounting the camera
+== Mounting the camera
 
 To mount the camera on a tripod, use one or more tripod thread insert holes on the bottom panel of the camera.
 
 To hang the camera, use the thread insert holes on the top panel of the camera.
 
-=== Rear I/O panel
+== Rear I/O panel
 
 TODO photo
 - 1x 5.5/2.1mm barrel jack receiver for power input
@@ -79,28 +75,27 @@ TODO photo
 - 2x XLR female audio input
 
 
-=== Powering the camera
+== Powering the camera
 
 Connect 12V >=1A power to the back panel of the camera using a 5.5/2.1mm barrel jack connector.
 
-=== Connect hdmi output (optional)
+== Connect hdmi output (optional)
 
 Connect a hdmi output cable to the back panel of the camera. This is optional. Video only output will still work over the network.
 
-=== Connect network (optional)
+== Connect network (optional)
 
 If you want to use ConfCam's network stream or remote configuration, connect to an ethernet network. 
 
-=== Connect XLR audio input (optional)
+== Connect XLR audio input (optional)
 
 Each audio input expects line level balanced mono XLR audio input.
 
-#pagebreak()
-== User interface
+= User interface
 
-=== Touchscreen
+== Touchscreen
 
-==== Top bar
+=== Top bar
 - Auto Exposure
   - AE Comp (auto exposure compensation): slider
   - Auto Exposure: toggle
@@ -126,7 +121,7 @@ Each audio input expects line level balanced mono XLR audio input.
     - Sensor
     - IP Address
 
-==== Bottom bar
+=== Bottom bar
 Toggles. White means disabled. Blue means enabled.
 
 - #link("https://en.wikipedia.org/wiki/Zebra_patterning")[Zebra]
@@ -136,14 +131,14 @@ Toggles. White means disabled. Blue means enabled.
 - Guides multi toggle: #link("https://en.wikipedia.org/wiki/Rule_of_thirds")[Thirds]|Cross|#link("https://en.wikipedia.org/wiki/Safe_area_(television)")[Safe area overlay]
 - HDMI overlay. Toggles visibility of menu items onto the hdmi output stream. 
 
-=== IP
+== IP
 
 The camera's ip address is available via the touchscreen: ⚙ -> info -> ip address. (The camera configures its ip address by dhcp.)
 
-==== Web
+=== Web
 The web interface is available at #link("http://$camera_ip").
 
-==== Ssh
+=== Ssh
 
 TODO The default ssh password is available via the touchscreen: ⚙ -> info -> password.
 
@@ -151,8 +146,7 @@ The ConfCam configration is stored in `/boot/camera.ini`.
 
 Systemd services to observe are: camera, camera-api and mediamtx.
 
-#pagebreak()
-== Output stream
+= Output stream
 
 The camera outputs are available as both an hdmi and a network stream.
 
