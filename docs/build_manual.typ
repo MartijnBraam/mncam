@@ -14,8 +14,6 @@
 #image("c2.png")
 ]
 
-THIS
-
 #let todo(c) = {
   text(red)[TODO: #c]
 }
@@ -44,103 +42,38 @@ THIS
 }
 #show link: underline
 
-= The Conference Camera
+These are build instructions for ConfCam, a modular open hardware camera for live streaming conferences.
 
-The goal of ConfCam is to provide a relatively cheap camera to do live streaming of talks at conferences.
-
-It is a device build around a Raspberry Pi and a camera module that produces a low latency video stream on
-the HDMI output to be captured by a HDMI capture solution like the Fazantix streaming box. It also
-provides remote control over the camera configuration over the network so the room live streaming can
-be administred remotely.
+Main features:
+- video output: low latency HDMI, network stream
+- control: touchscreen, web browser and ssh
+- audio input: dual XLR, dual internal mic
+- modular sensors and lenses
 
 #outline()
 
-= Building the camera
+= Hardware build
+== BOM
 
-There are two variations of the camera that can be built from roughly the same parts. There's the Proto4 case
-that has a DSLR style body and the BoxCam case that is more similar to a modern cinema camera style body.
-
-== Common parts
-
-All current versions of the camera are build around the same Raspberry Pi and display. The Raspberry Pi 4 is
-used because the newer versions no longer have the DSI output for the display connected to the SoC so they
-don't allow the zero copy video output directly from the camera on it.
-
-- Raspberry Pi 4 Model B
-- SD card for the Raspberry Pi
+For building the most accessible variant, the following components are used:
+- Raspberry pi 4 compute module >=1 Gb RAM. Note that the Raspberry pi 5 compute module will not work. It lacks crucial components.
+- 8 Gb SD card
 - Waveshare 5inch 1024x600 DSI touch display (#link("https://www.waveshare.com/5inch-dsi-lcd-c.htm")[5inch-dsi-lcd-c])
-- Threaded metal inserts for putting bolts in the 3D prints. Most of the design uses M2.5x4x4 inserts.
-- M2.5 bolts. For the Proto4 design the Waveshare display comes with enough of them. For the Boxcam design more need to be ordered.
+- Raspberry pi HQ camera module
+- custom audio module
+- 3d printed
+  - case
+  - lens mount
+- cables and connectors
+- screws, nuts and bolts
+- connectors
+- threaded M2.5x4x4 metal inserts for putting bolts in the 3D prints
+- M2.5x6mm bolts
 
-#note[
-  Sizes of threaded metal heat-inserts are specified in #text(gray)[size]x#text(gray)[depth]x#text(gray)[outer-diameter] format. For example
-  an M2.5x5x4 is an insert for an M2.5 sized bolt that fits in a hole that's 5mm deep and 4mm in diameter.
-]
-
-== Sensors and lenses
-
-The cases are designed to have a modular lens and sensor mounting system, allowing to build a camera with any combination of the
-supported sensors and lens mounts. This is done by printing the sensor mount for the sensor you need and mounting that to one
-of the lens mounts to make a complete sensor assembly.
-
-=== Raspberry Pi HQ sensor (IMX477)
-
-This is the easiest sensor to get and combines well with C-mount lenses.
-
-- Raspberry Pi HQ sensor (#link("https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/")[at raspberrypi.com])
-
-This sensor has a pretty nice metal C-mount attached to it so for this specific case there's a seperate mount that integrates
-the sensor and lens mount. For this print `p4_pi_hq.stl` and order 4x M2.5x4x4 inserts and 4 M2.5 bolts.
-
-=== Waveshare IMX290/IMX462
-
-This sensor has better light sensitivity but slightly higher base noise than the Raspberry Pi HQ sensor.
-The IMX462 is a slightly newer version of the sensor with better noise performance but otherwise identical.
-
-These sensors come on a slightly smaller board than the official Raspberry Pi sensors and always come with
-a pre-mounted lens that first has to be removed. Waveshare also has slightly different versions available
-with slightly adjusted mounting points. ConfCam uses the version that has the mounting points to the side
-of the connector instead of behind it.
-
-- #link("https://www.waveshare.com/imx290-83-ir-cut-camera.htm")[Waveshare IMX290-83 IR-CUT]
-- #link("https://www.waveshare.com/imx462-ir-cut-camera-a.htm")[Waveshare IMX462 IR-CUT Camera (A)]
-
-For these sensors print the `p4_imx290.stl` file and order 4x M2.5x4x4 inserts and 4 M2.5 bolts.
-
-=== C-mount lenses
-
-The easiest and cheapest option for lenses are the C-mount security camera lenses. These are widely available and match
-pretty well with the small sensors used in the ConfCam. The most flexible option is the 8-50mm lens that can be found
-rebranded from many manufacturers.
-
-- 8-50mm C-mount lens (#link("https://www.waveshare.com/product/raspberry-pi/cameras/10mp-pixels/8-50mm-zoom-lens-for-pi.htm")[available at Waveshare])
-
-For this lens mount you need to print `p4_cmount.stl` and this print takes 4 M2.5x4x4 inserts. 4 M2.5 bolts are needed
-to mount the sensor to the lens mount.
-
-=== MFT lenses
-
-For better image quality MFT lenses can be used, but due to the small sensor sizes the effective zoom will be
-massively increased.
-
-The MFT mount is a spring loaded bayonet mount and needs some parts scavenged from an existing MFT extension
-tube to work properly.
-
-- #link("aliexpress.com/item/1005012641252086.html")[MCoplus autofocus MFT extension tube]
-
-This extension set comes with 3 adapters that each have the machined metal parts that are needed. Remove
-the lens side of these adapters and keep the metal ring that holds the ring, the metal spring ring that
-is below it and the 4 screws that mounts them to the case.
-
-For this lens mount you need to print `p4_mft.stl` and mount the MFT extension tube parts to that. Then 4
-M2.5x4x4 inserts and M2.5 bolts are used for mounting the sensor to the lens mount.
-
-== The BoxCam
+== The box
 #align(center)[#image("box-exploded.png")]
 
-This case is designed to be a modular box that mounts on top of a tripod. The bottom of the box frame is
-always a tripod mounting plate with 3 holes for tripod thread inserts. The other 5 sides are modular
-and can be used to reconfigure the design of the camera.
+The bottom of the box frame is a tripod mounting plate with 3 holes for tripod thread inserts. The other 5 sides you can adapt to your needs.
 
 
 === The frame
@@ -164,6 +97,40 @@ The lens adapter itself mounts to this panel using 4 M2.5 inserts and screws:
 - 4x M2.5x4x4 theaded metal insert
 - 4x M2.5 bolt
 
+== Common parts
+
+All current versions of the camera are build around the same Raspberry Pi and display. The Raspberry Pi 4 is used because the newer versions no longer have the DSI output for the display connected to the SoC so they don't allow the zero copy video output directly from the camera on it.
+
+
+#note[
+  Sizes of threaded metal heat-inserts are specified in #text(gray)[size]x#text(gray)[depth]x#text(gray)[outer-diameter] format. For example
+  an M2.5x5x4 is an insert for an M2.5 sized bolt that fits in a hole that's 5mm deep and 4mm in diameter.
+]
+
+== Sensors and lenses
+
+The cases are designed to have a modular lens and sensor mounting system, allowing to build a camera with any combination of the
+supported sensors and lens mounts. This is done by printing the sensor mount for the sensor you need and mounting that to one
+of the lens mounts to make a complete sensor assembly.
+
+=== Raspberry Pi HQ sensor (IMX477)
+
+This is the easiest sensor to get. It combines well with C-mount lenses.
+
+- Raspberry Pi HQ sensor (#link("https://www.raspberrypi.com/products/raspberry-pi-high-quality-camera/")[at raspberrypi.com])
+
+This sensor has a pretty nice metal C-mount attached to it so for this specific case there's a seperate mount that integrates
+the sensor and lens mount. For this print `p4_pi_hq.stl` and order 4x M2.5x4x4 inserts and 4 M2.5 bolts.
+
+=== C-mount lenses
+
+C-mount security camera lenses are the easiest and cheapest option. These are widely available and match pretty well with the small sensors used in the ConfCam. The most flexible option is the 8-50mm lens that can be found rebranded from many manufacturers.
+
+- 8-50mm C-mount lens (#link("https://www.waveshare.com/product/raspberry-pi/cameras/10mp-pixels/8-50mm-zoom-lens-for-pi.htm")[available at Waveshare])
+
+For this lens mount you need to print `p4_cmount.stl` and this print takes 4 M2.5x4x4 inserts TODO length. 4 M2.5x6 bolts are needed
+to mount the sensor to the lens mount.
+
 === Display
 One of the two long sides of the case are for the 5" display. For this print `panel/waveshare_5inch.scad`
 
@@ -186,50 +153,84 @@ For this panel print `panel/rear_io_6d.stl` and order these parts:
 - 8x M3x10 bolt
 - 8x M3 nut
 
-These will be connected to the Raspberry Pi that will be placed inside the camera. It's possible to
-also add an extra HDMI feedthrough to use both the HDMI outputs of the Pi for different output feeds.
+Connect these to the Raspberry Pi inside the camera.
 
 == The Raspberry Pi
 
-Now the essential panels are installed it's possible to install the Raspberry Pi. 
+With the essential panels installed, install the Raspberry Pi. 
 
-= Installing the software
+= Software installation
 
-ConfCam consists of several software components running on top of Raspbian Trixie. The first step
-is to install Raspbian Trixie lite 64-bit using the normal Raspberry Pi install methods. Then clone
-the git repository for ConfCam. This contains the required software and an installation script:
+ConfCam consists of several software components running on top of Raspbian Trixie.
+
+== Raspbian trixie 64 bit
+#link("https://projects.raspberrypi.org/en/projects/imager-install")[Install Raspbian Trixie lite 64-bit].
+
+== Install c2 software
+
+Boot the Raspberry pi with Raspbian trixie 64 bit installed. Either connect an external screen and keyboard or log in through ssh.
+
+Clone the c2 git repository:
 
 ```
 $ git clone https://github.com/martijnbraam/c2
+```
+
+Now we run the installation script:
+```
 $ cd c2
 $ ./install.sh
 ```
 
-This should install MediaMTX and configure it. This is used for making the h264 stream available
-on the network for remote viewing on the webinterface. It also installs the `c2` python package
-itself which renders all the UI and controls the hardware.
+This installs two components:
+- MediaMTX. This publishes the video to the network.
+- the `c2` python package. This publishes the video over hdmi, controls the hardware and renders the touchscreen UI.
 
-Manual adjustments are required in the Raspberry Pi boot configuration. Edit the file at
-`/boot/firmware/config.txt` and adjust it to the installed hardware:
+== Configure software
 
-- For the Waveshare display used in this manual add `dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC`
-  to load the driver.
-- For the prototype audio board add `dtoverlay=mncam-proto3`
-- When not using a Raspberry Pi Foundation sensor, disable `camera_auto_detect` and add the overlay
-  required for the specific sensor.
+=== `/boot/firmware/config.txt`
 
-The first time ConfCam starts the hardware is autodetected and a configuration file is generated for it.
-This is mainly detecting wether there's a DSI panel in the camera for the UI or if HDMI is used for
-the monitoring output. If the hardware is changed or the detection is run before the Raspberry Pi
-boot config was adjusted you can remove `/boot/camera.ini` and restart the camera to re-detect the
-hardware.
+Now edit `/boot/firmware/config.txt` and adjust it to the installed hardware:
 
-== The configuration file
+- For the Waveshare display, uncomment the line `dtoverlay=vc4-kms-dsi-waveshare-panel,7_0_inchC` to load the driver. Note the actual display size is 5", but the driver name suggests 7". That is confusing, but correct.
+- For the audio board, uncomment the line `dtoverlay=mncam-proto3` to load the driver.
 
-The configration for ConfCam is stored in `/boot/camera.ini`
+Now, we reboot the system:
+`/sbin/reboot`
 
-= Using the camera
+=== `/boot/camera.ini`
 
-By default the camera will start in full-automatic mode. The controls on the top of the touchscreen
-configure all the exposure parameters for the camera.
+After the reboot, the camera and display hardware are autodetected. This generates a `/boot/camera.ini` configuration file. Verify this exists. Changes to this file are optional. This is where changes made using the touchscreen will be saved.
+
+== Alternative hardware
+
+=== Alternative sensors
+If not using a Raspberry Pi Foundation sensor, in `/boot/firmware/config.txt`, comment the line `camera_auto_detect` and uncomment the line for your specific sensor.
+
+==== Waveshare IMX462
+
+This sensor has better light sensitivity but slightly higher base noise than the Raspberry Pi HQ sensor.
+
+It comes on a slightly smaller board than the official Raspberry Pi HQ sensor. You will have to remove the pre-mounted lens first.
+
+Waveshare also has slightly different versions available with slightly adjusted mounting points. ConfCam uses a version with the mounting points to the side of the connector instead of behind it.
+
+- #link("https://www.waveshare.com/imx462-ir-cut-camera-a.htm")[Waveshare IMX462 IR-CUT Camera (A)]
+
+For this sensor, 3d print `p4_imx290.stl` and order 4x M2.5x4x4 inserts and 4 M2.5 bolts.
+
+
+=== MFT lenses
+
+For better image quality MFT lenses can be used. Do mind that if combined with a small sensor, the effective zoom will be massively increased.
+
+The MFT mount is a spring loaded bayonet mount. It needs some parts scavenged from an existing MFT extension
+tube to work properly.
+
+- #link("aliexpress.com/item/1005012641252086.html")[MCoplus autofocus MFT extension tube]
+
+This extension set comes with 3 adapters. Each adapter has the machined metal parts needed. Remove the lens side of the adapter and keep the metal ring that holds the ring, the metal spring ring below it and the 4 screws that mount them to the case.
+
+For this lens mount you need to print `p4_mft.stl` and mount the MFT extension tube parts to that. Use 4 M2.5x4x4 inserts and M2.5 bolts to mount the sensor to the lens mount.
+
 
