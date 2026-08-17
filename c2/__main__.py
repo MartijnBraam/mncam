@@ -17,6 +17,7 @@ import numpy as np
 from c2.api import ControlAPI
 from c2.audio import AudioManager
 from c2.config import Config
+from c2.control import ControlCollection, StateControl, Log10Mapper
 from c2.drmoutput import DRMOutput
 from c2.edid import check_edid
 
@@ -38,6 +39,7 @@ class Camera:
         self.preview_w = 1
         self.preview_h = 1
         self.cal = {}
+        self.controls = ControlCollection()
 
         self.load_tuning()
 
@@ -76,6 +78,7 @@ class Camera:
             self.out_aux = self.drm.use_output(self.config.aux.output, self.config.aux.mode[0], self.config.aux.mode[1],
                                                self.config.aux.framerate, 1)
         # Configure the hardware H.264 encoder
+        self.controls.add(StateControl("encoder-enabled", self.config.encoder.enabled, 0, 1, True))
         if self.config.encoder.enabled:
             self.encoder = H264Encoder(self.config.encoder.bitrate_int)
             self.stream = PyavOutput("rtsp://127.0.0.1:8554/cam", format="rtsp")
@@ -99,14 +102,16 @@ class Camera:
         self.levels = queue.Queue()
         self.vu = Image.new("RGBA", (512, 32), "black")
 
-        self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls)
-        self.ui_hdmi = UI(1920, 64, self, self.config, self.cam.camera_controls, hdmi=True)
+        self.init_controls()
+
+        self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls, self.controls)
+        self.ui_hdmi = UI(1920, 64, self, self.config, self.cam.camera_controls, self.controls, hdmi=True)
 
         def on_aux_paint(buf):
             self.drm.set_overlay(buf, output=self.output_aux, num=0)
 
         if self.config.aux.purpose != 'clean':
-            self.ui_aux = UI(1920, 64, self, self.config, self.cam.camera_controls, hdmi=True)
+            self.ui_aux = UI(1920, 64, self, self.config, self.cam.camera_controls, self.controls, hdmi=True)
             self.ui_aux.paint_hook = on_aux_paint
 
         def on_paint(buf):
@@ -133,6 +138,20 @@ class Camera:
         self.cam.close()
         self.cal = self.cam.load_tuning_file(f"{sensor_model}.json", dir=cal_dir)
         self.cam = Picamera2(tuning=self.cal)
+
+    def init_controls(self):
+        limits = self.cam.camera_controls
+
+        self.controls.add(StateControl("shutter", 0, self.config.sensor.framerate, self.config.sensor.framerate * 360))
+
+        ctrl_min, ctrl_max, ctrl_default = limits["AnalogueGain"]
+        self.controls.add(StateControl("gain", ctrl_default, ctrl_min, ctrl_max, mapper=Log10Mapper(), unit="dB"))
+        self.controls.gain.set_handler(lambda v: self.set_gain(v))
+
+        ctrl_min, ctrl_max, ctrl_default = limits["ExposureValue"]
+        self.controls.add(StateControl("auto-exposure-compensation", ctrl_default, ctrl_min, ctrl_max, unit="EV"), key="aec")
+        self.controls.aec.set_handler(lambda v: self.set_ev(v))
+
 
     def start(self):
         self.cam.start_preview(self.drm)
@@ -293,12 +312,11 @@ class Camera:
         self.cam.set_controls({"AwbEnable": enabled})
 
     def set_ev(self, compensation):
-        self.ui.ec.set(compensation)
         self.cam.set_controls({"ExposureValue": compensation})
+        self.controls.aec.value.set(compensation)
 
     def set_gain(self, gain):
         self.enable_auto_exposure(False)
-        self.ui.gain.set(gain)
         self.cam.set_controls({"AnalogueGain": gain})
 
     def set_focus(self, distance):

@@ -46,7 +46,7 @@ class ControlAPI:
         except BlockingIOError:
             pass
 
-        if self.cam.ui.ec.once(self):
+        if self.cam.controls.aec.value.once(self):
             self.broadcast(self.send_controls)
         if self.cam.ui.ae.once(self):
             self.broadcast(self.send_controls)

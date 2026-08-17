@@ -486,7 +486,7 @@ class Slider(Widget):
                        slide_start + pos,
                        vcenter + self.thickness,
                        ), fill=bc)
-        if slide_start+pos < self.x2 - 10:
+        if slide_start + pos < self.x2 - 10:
             ctx.rectangle((slide_start + pos,
                            vcenter - self.thickness,
                            self.x2 - 10,
@@ -525,6 +525,15 @@ class Slider(Widget):
         x += self.min.value
         if self.handler is not None:
             self.handler(x)
+
+
+class ControlSlider(Slider):
+    def __init__(self, label, control, background=None, text_width=None):
+        def handle(val):
+            control.set(val, front=True)
+
+        super().__init__(label, control.value, min=control.min, max=control.max, handler=handle, background=background,
+                         text_width=text_width)
 
 
 class VBox(Widget):
