@@ -6,12 +6,13 @@ import socket
 
 from c2.backlight import find_backlight, get_backlight_int, set_backlight
 from c2.toolkit import StateNumber, Layout, GuidesButton, HandleInputs, TapEvent, DoubleTapEvent, VBox, Slider, \
-    ToggleRow, Guides, RadioRow, MoveEvent, ReleaseEvent, TextRow
+    ToggleRow, Guides, RadioRow, MoveEvent, ReleaseEvent, TextRow, ControlSlider
 
 
 class UI:
-    def __init__(self, width, height, camera, config, limits, hdmi=False):
+    def __init__(self, width, height, camera, config, limits, controls, hdmi=False):
         self.width = width
+        self.controls = controls
         self.height = height
         self.cam = camera
         self.config = config
@@ -26,39 +27,19 @@ class UI:
         self.overlay_state = {}
         self.settings_tab = StateNumber("system")
 
-        # Fixed info
-        self.min_shutter = StateNumber(self.config.sensor.framerate)
-        self.max_shutter = StateNumber(self.config.sensor.framerate * 10)
-
-        ctrl_min, ctrl_max, ctrl_default = limits["AnalogueGain"]
-        self.max_gain = StateNumber(ctrl_max)
-        ctrl_min, ctrl_max, ctrl_default = limits["ExposureValue"]
-        self.min_ec = StateNumber(ctrl_min)
-        self.max_ec = StateNumber(ctrl_max)
         self.has_af = StateNumber("LensPosition" in limits)
         if self.has_af.value:
             ctrl_min, ctrl_max, ctrl_default = limits["LensPosition"]
             self.min_focus = StateNumber(ctrl_min)
             self.max_focus = StateNumber(ctrl_max)
-        ctrl_min, ctrl_max, ctrl_default = limits["ColourTemperature"]
-        self.min_temp = StateNumber(ctrl_min)
-        self.max_temp = StateNumber(ctrl_max)
 
         # Camera state
         self.fps = StateNumber(self.config.sensor.framerate)
-        self.shutter = StateNumber()
-        self.gain = StateNumber()
-        self.temperature = StateNumber()
         self.tc = StateNumber()
         self.camera_id = StateNumber()
-        self.ae = StateNumber(True)
-        self.awb = StateNumber(True)
-        self.awbmode = StateNumber("auto")
-        self.ec = StateNumber(0.0)
         self.af = StateNumber("C")
         self.af_pos = StateNumber((0.5, 0.5))
         self.focus = StateNumber(0.0)
-        self.tally = StateNumber(0)
         self.ip = StateNumber("N/A")
 
         # Primary color corrector state
@@ -128,17 +109,17 @@ class UI:
 
     def _create_hdmi_layout(self):
         l: Layout = self.screens["main"]
-        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.ec, align="left", name="ae",
+        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.controls.aec.value, align="left", name="ae",
                     handler=lambda v: self.tab_state.toggle("ae"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "ae")
 
         l.add_label(Layout.TOPLEFT, 80, "FPS", "{}", self.fps, align="left",
                     handler=lambda v: self.tab_state.toggle("fps"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "fps")
-        l.add_label(Layout.TOPLEFT, 100, "Shutter", "1/{}", self.shutter, align="left", name="shutter",
+        l.add_label(Layout.TOPLEFT, 100, "Shutter", "1/{}", self.controls.shutter.value, align="left", name="shutter",
                     handler=lambda v: self.tab_state.toggle("shutter"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "shutter")
-        l.add_label(Layout.TOPLEFT, 100, "Gain", "{} dB", self.gain, align="left", name="gain",
+        l.add_label(Layout.TOPLEFT, 100, "Gain", "{} dB", self.controls.gain.value, align="left", name="gain",
                     handler=lambda v: self.tab_state.toggle("gain"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "gain")
         l.add_label(Layout.TOPMIDDLE, 200, "Timecode", "{}", self.tc, None, "middle")
@@ -149,17 +130,17 @@ class UI:
     def _create_main_layout(self):
         l: Layout = self.screens["main"]
 
-        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.ec, align="left", name="ae",
+        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.controls.aec.value, align="left", name="ae",
                     handler=lambda v: self.tab_state.toggle("ae"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "ae")
 
         l.add_label(Layout.TOPLEFT, 80, "FPS", "{}", self.fps, align="left",
                     handler=lambda v: self.tab_state.toggle("fps"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "fps")
-        l.add_label(Layout.TOPLEFT, 100, "Shutter", "1/{}", self.shutter, align="left", name="shutter",
+        l.add_label(Layout.TOPLEFT, 100, "Shutter", "1/{}", self.controls.shutter.value, align="left", name="shutter",
                     handler=lambda v: self.tab_state.toggle("shutter"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "shutter")
-        l.add_label(Layout.TOPLEFT, 100, "Gain", "{} dB", self.gain, align="left", name="gain",
+        l.add_label(Layout.TOPLEFT, 100, "Gain", "{:.0f} dB", self.controls.gain.value, align="left", name="gain",
                     handler=lambda v: self.tab_state.toggle("gain"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "gain")
 
@@ -170,7 +151,7 @@ class UI:
                         handler=lambda v: self.tab_state.toggle("focus"),
                         button_state=self.tab_state, state_cmp=lambda s: s == "focus")
 
-        l.add_label(Layout.TOPRIGHT, 100, "Balance", "{}k", self.temperature, align="left", name="wb",
+        l.add_label(Layout.TOPRIGHT, 100, "Balance", "{}K", self.controls.temperature.value, align="left", name="wb",
                     handler=lambda v: self.tab_state.toggle("wb"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "wb")
 
@@ -201,16 +182,13 @@ class UI:
         # Shutter control panel
         shutter_panel = VBox(name="shutter")
         shutter_panel.add(
-            Slider("Shutter", self.shutter, handler=lambda v: self.cam.set_shutter(v), min=self.min_shutter,
-                   max=self.max_shutter, background=(0, 0, 0, 80)))
+            ControlSlider("Shutter", self.controls.shutter, background=(0, 0, 0, 80)))
         shutter_panel.compute()
         l.add_widget(Layout.MIDDLE, shutter_panel)
 
         # Gain control panel
         gain_panel = VBox(name="gain")
-        gain_panel.add(
-            Slider("Gain", self.gain, min=StateNumber(1.0), max=self.max_gain, handler=lambda v: self.cam.set_gain(v),
-                   background=(0, 0, 0, 80)))
+        gain_panel.add(ControlSlider("Gain", self.controls.gain, background=(0, 0, 0, 80)))
         gain_panel.compute()
         l.add_widget(Layout.MIDDLE, gain_panel)
 
@@ -228,30 +206,25 @@ class UI:
 
         # Auto exposure controls panel
         ae_panel = VBox(name="ae")
-        ae_panel.add(
-            Slider("AE Comp", self.ec, min=self.min_ec, max=self.max_ec, handler=lambda v: self.cam.set_ev(v),
-                   background=(0, 0, 0, 80)))
-        ae_panel.add(ToggleRow("Auto Exposure", self.ae, handler=lambda v: self.cam.enable_auto_exposure(v),
+        ae_panel.add(ControlSlider("AE Comp", self.controls.aec, background=(0, 0, 0, 80)))
+        ae_panel.add(ToggleRow("Auto Exposure", self.controls.ae.value, handler=lambda v: self.controls.ae.set(v),
                                background=(0, 0, 0, 80)))
         ae_panel.compute()
         l.add_widget(Layout.MIDDLE, ae_panel)
 
         # Whitebalance control panel
         wb_panel = VBox(name="wb")
-        wb_panel.add(
-            Slider("Temperature", self.temperature, min=self.min_temp, max=self.max_temp,
-                   handler=lambda v: self.cam.set_whitebalance(v),
-                   background=(0, 0, 0, 80)))
-        wb_panel.add(ToggleRow("Auto Whitebalance", self.awb, handler=lambda v: self.cam.enable_auto_whitebalance(v),
+        wb_panel.add(ControlSlider("Temperature", self.controls.temperature, background=(0, 0, 0, 80)))
+        wb_panel.add(ToggleRow("Auto Whitebalance", self.controls.awb.value, handler=lambda v: self.controls.awb.set(v),
                                background=(0, 0, 0, 80)))
-        wb_panel.add(RadioRow("Mode", self.awbmode, options={
+        wb_panel.add(RadioRow("Mode", self.controls.awbmode.value, options={
             "auto": "Auto",
             "tungsten": "Tungsten",
             "fluorescent": "Fluorescent",
             "indoor": "Indoor",
             "daylight": "Daylight",
             "cloudy": "Cloudy",
-        }, handler=lambda v: self.cam.set_awb_mode(v),
+        }, handler=lambda v: self.controls.awbmode.set(v),
                               background=(0, 0, 0, 80)))
 
         wb_panel.compute()
@@ -383,11 +356,11 @@ class UI:
     def update_state(self, state):
         self.state = state
 
-        if self.tally.once(self):
+        if self.controls.tally.value.once(self):
             color = (255, 255, 255, 255)
-            if self.tally.value & 2:
+            if self.controls.tally.value.value & 2:
                 color = (0, 255, 0, 255)
-            if self.tally.value & 1:
+            if self.controls.tally.value.value & 1:
                 color = (255, 0, 0, 255)
             tc = self.screens["main"]["tc"]
             if tc is not None:
@@ -407,9 +380,10 @@ class UI:
 
         tc = datetime.datetime.fromtimestamp(self.state["SensorTimestamp"] / 1000000000, tz=datetime.timezone.utc)
         self.tc.set(tc.strftime("%H:%M:%S"))
-        self.shutter.set(int(1000000 / state["ExposureTime"]))
-        self.gain.set(int(round(10 * math.log10(state["AnalogueGain"]))))
-        self.temperature.set(state["ColourTemperature"])
+
+        self.controls.shutter.set(int(1000000 / state["ExposureTime"]), front=False)
+        self.controls.gain.set(state["AnalogueGain"], front=False)
+        self.controls.temperature.set(state["ColourTemperature"], front=False)
         if "LensPosition" in state:
             self.focus.set(state["LensPosition"])
         if "AfState" in state:
@@ -422,10 +396,10 @@ class UI:
         else:
             self.af.set("")
 
-        if self.ae.once("update_state"):
-            self.screens["main"]["gain"].color_text = (128, 128, 128, 255) if self.ae.value else (255, 255, 255, 255)
-            self.screens["main"]["shutter"].color_text = (128, 128, 128, 255) if self.ae.value else (255, 255, 255, 255)
-            self.screens["main"]["ae"].color_text = (128, 128, 128, 255) if not self.ae.value else (255, 255, 255, 255)
+        if self.controls.ae.value.once("update_state"):
+            self.screens["main"]["gain"].color_text = (128, 128, 128, 255) if self.controls.ae else (255, 255, 255, 255)
+            self.screens["main"]["shutter"].color_text = (128, 128, 128, 255) if self.controls.ae else (255, 255, 255, 255)
+            self.screens["main"]["ae"].color_text = (128, 128, 128, 255) if not self.controls.ae else (255, 255, 255, 255)
 
         buf = self.screens[self.active_screen].render()
         if buf is not None:

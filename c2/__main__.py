@@ -14,9 +14,10 @@ from picamera2.encoders import H264Encoder
 from picamera2.outputs import PyavOutput
 import numpy as np
 
-from c2.api import ControlAPI
+from c2.api import MisirkaAPI
 from c2.audio import AudioManager
 from c2.config import Config
+from c2.control import ControlCollection, StateControl, Log10Mapper
 from c2.drmoutput import DRMOutput
 from c2.edid import check_edid
 from c2.gamma import open_isp, generate_curve, set_isp_gamma
@@ -40,6 +41,7 @@ class Camera:
         self.preview_w = 1
         self.preview_h = 1
         self.cal = {}
+        self.controls = ControlCollection()
 
         self.load_tuning()
 
@@ -78,6 +80,7 @@ class Camera:
             self.out_aux = self.drm.use_output(self.config.aux.output, self.config.aux.mode[0], self.config.aux.mode[1],
                                                self.config.aux.framerate, 1)
         # Configure the hardware H.264 encoder
+        self.controls.add(StateControl("encoder-enabled", self.config.encoder.enabled, True))
         if self.config.encoder.enabled:
             self.encoder = H264Encoder(self.config.encoder.bitrate_int, framerate=self.config.sensor.framerate,
                                        profile='high')
@@ -88,7 +91,6 @@ class Camera:
             self.update_preview(request)
 
         self.cam.pre_callback = preview
-        self.api = ControlAPI(self)
 
         self.mat_black = None
         self.mat_white = None
@@ -102,14 +104,17 @@ class Camera:
         self.levels = queue.Queue()
         self.vu = Image.new("RGBA", (512, 32), "black")
 
-        self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls)
-        self.ui_hdmi = UI(1920, 64, self, self.config, self.cam.camera_controls, hdmi=True)
+        self.init_controls()
+        self.api = MisirkaAPI(self.controls)
+
+        self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls, self.controls)
+        self.ui_hdmi = UI(1920, 64, self, self.config, self.cam.camera_controls, self.controls, hdmi=True)
 
         def on_aux_paint(buf):
             self.drm.set_overlay(buf, output=self.output_aux, num=0)
 
         if self.config.aux.purpose != 'clean':
-            self.ui_aux = UI(1920, 64, self, self.config, self.cam.camera_controls, hdmi=True)
+            self.ui_aux = UI(1920, 64, self, self.config, self.cam.camera_controls, self.controls, hdmi=True)
             self.ui_aux.paint_hook = on_aux_paint
 
         def on_paint(buf):
@@ -136,6 +141,47 @@ class Camera:
         self.cam.close()
         self.cal = self.cam.load_tuning_file(f"{sensor_model}.json", dir=cal_dir)
         self.cam = Picamera2(tuning=self.cal)
+
+    def init_controls(self):
+        limits = self.cam.camera_controls
+        ctrl_min, ctrl_max, ctrl_default = limits["ExposureTime"]
+
+        self.controls.add(StateControl("shutter", 0, int(1000000 / ctrl_max), int(1000000 / ctrl_min)))
+        self.controls.shutter.help = "Shutter speed for the sensor"
+        self.controls.shutter.set_handler(lambda v: self.set_shutter(v))
+
+        ctrl_min, ctrl_max, ctrl_default = limits["AnalogueGain"]
+        self.controls.add(StateControl("gain", ctrl_default, ctrl_min, ctrl_max, mapper=Log10Mapper(), unit="dB"))
+        self.controls.gain.set_handler(lambda v: self.set_gain(v))
+        self.controls.gain.help = "Analog sensor gain"
+
+        ctrl_min, ctrl_max, ctrl_default = limits["ExposureValue"]
+        self.controls.add(StateControl("auto-exposure-compensation", ctrl_default, ctrl_min, ctrl_max, unit="EV"),
+                          key="aec")
+        self.controls.aec.set_handler(lambda v: self.set_ev(v))
+        self.controls.aec.help = "The auto-exposure compensation value to bias the auto exposure algorithm brighter or darker"
+
+        self.controls.add(StateControl("auto-exposure", True), key="ae")
+        self.controls.ae.set_handler(lambda v: self.enable_auto_exposure(v))
+        self.controls.ae.help = "Auto exposure"
+
+        ctrl_min, ctrl_max, ctrl_default = limits["ColourTemperature"]
+        self.controls.add(StateControl("temperature", ctrl_default, ctrl_min, ctrl_max, unit="K"))
+        self.controls.temperature.set_handler(lambda v: self.set_whitebalance(v))
+
+        self.controls.add(StateControl("awb", True))
+        self.controls.awb.set_handler(lambda v: self.enable_auto_whitebalance(v))
+        self.controls.awb.help = "Auto whitebalance"
+
+        self.controls.add(StateControl("awb-mode", "auto",
+                                       choices=["auto", "tungsten", "fluorescent", "indoor", "daylight", "cloudy"]),
+                          key="awbmode")
+        self.controls.awbmode.set_handler(lambda v: self.set_awb_mode(v))
+        self.controls.awbmode.help = "Auto-whitebalance mode, this limits the range of colour temperatures used by the automatic algorithm"
+
+        self.controls.add(StateControl("tally", 0, minv=0, maxv=3))
+        self.controls.tally.set_handler(lambda v: self.set_tally(v))
+        self.controls.tally.help = "The state of the tally indicator"
 
     def start(self):
         self.cam.start_preview(self.drm)
@@ -169,12 +215,12 @@ class Camera:
         # Change the temperature range to the one in the calibration file
         awb = Picamera2.find_tuning_algo(self.cal, "rpi.awb")
         if "ct_curve" in awb:
-            self.ui.min_temp.set(awb["ct_curve"][0])
-            self.ui.max_temp.set(awb["ct_curve"][-3])
+            self.controls.temperature.min.set(awb["ct_curve"][0])
+            self.controls.temperature.max.set(awb["ct_curve"][-3])
         else:
             print("No CT curve defined in sensor calibration file")
-            self.ui.min_temp.set(2500)
-            self.ui.max_temp.set(9000)
+            self.controls.temperature.min.set.set(2500)
+            self.controls.temperature.max.set.set(9000)
 
         self.update_gamma_curve()
 
@@ -235,8 +281,7 @@ class Camera:
     def loop(self):
         start = time.time()
         self.state = self.cam.capture_metadata()
-        self.api.update_state(self.cam.capture_metadata())
-        self.api.do_work()
+        self.api.update()
         self.ui.update_state(self.cam.capture_metadata())
         self.ui_hdmi.update_state(self.cam.capture_metadata())
         if self.config.aux.output != 'disabled' and self.config.aux.purpose != 'clean':
@@ -290,11 +335,11 @@ class Camera:
         self.ui.zoom.set(self.out_dsi.zoom)
 
     def enable_auto_exposure(self, enabled):
-        self.ui.ae.set(enabled)
+        self.controls.ae.set(enabled, front=False)
         self.cam.set_controls({"AeEnable": enabled})
 
     def enable_auto_whitebalance(self, enabled):
-        self.ui.awb.set(enabled)
+        self.controls.awb.set(enabled, front=False)
         self.cam.set_controls({"AwbEnable": enabled})
 
     def update_gamma_curve(self):
@@ -320,12 +365,11 @@ class Camera:
         self.update_gamma_curve()
 
     def set_ev(self, compensation):
-        self.ui.ec.set(compensation)
         self.cam.set_controls({"ExposureValue": compensation})
+        self.controls.aec.value.set(compensation)
 
     def set_gain(self, gain):
         self.enable_auto_exposure(False)
-        self.ui.gain.set(gain)
         self.cam.set_controls({"AnalogueGain": gain})
 
     def set_focus(self, distance):
@@ -333,7 +377,7 @@ class Camera:
         self.cam.set_controls({"LensPosition": distance})
 
     def set_awb_mode(self, mode):
-        self.ui.awbmode.set(mode)
+        self.controls.awbmode.set(mode, front=False)
         if mode == "auto":
             self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Auto})
         elif mode == "tungsten":
@@ -409,7 +453,6 @@ class Camera:
 
     def set_shutter(self, shutter):
         self.enable_auto_exposure(False)
-        self.ui.shutter.set(shutter)
         et = int(1 / shutter * 1000000)
         self.cam.set_controls({"ExposureTime": et})
 
@@ -421,7 +464,7 @@ class Camera:
         self.ui.min_shutter.set(fps)
 
     def set_tally(self, mask):
-        self.ui.tally.set(mask)
+        self.controls.tally.set(mask, front=False)
 
     def update_preview(self, request):
         ordering = []
