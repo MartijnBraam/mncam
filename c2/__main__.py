@@ -14,7 +14,7 @@ from picamera2.encoders import H264Encoder
 from picamera2.outputs import PyavOutput
 import numpy as np
 
-from c2.api import ControlAPI
+from c2.api import MisirkaAPI
 from c2.audio import AudioManager
 from c2.config import Config
 from c2.control import ControlCollection, StateControl, Log10Mapper
@@ -88,7 +88,6 @@ class Camera:
             self.update_preview(request)
 
         self.cam.pre_callback = preview
-        self.api = ControlAPI(self)
 
         self.mat_black = None
         self.mat_white = None
@@ -103,6 +102,7 @@ class Camera:
         self.vu = Image.new("RGBA", (512, 32), "black")
 
         self.init_controls()
+        self.api = MisirkaAPI(self.controls)
 
         self.ui = UI(self.ui_size[0], self.ui_size[1], self, self.config, self.cam.camera_controls, self.controls)
         self.ui_hdmi = UI(1920, 64, self, self.config, self.cam.camera_controls, self.controls, hdmi=True)
@@ -143,14 +143,17 @@ class Camera:
         limits = self.cam.camera_controls
 
         self.controls.add(StateControl("shutter", 0, self.config.sensor.framerate, self.config.sensor.framerate * 360))
+        self.controls.shutter.help = "Shutter speed for the sensor"
 
         ctrl_min, ctrl_max, ctrl_default = limits["AnalogueGain"]
         self.controls.add(StateControl("gain", ctrl_default, ctrl_min, ctrl_max, mapper=Log10Mapper(), unit="dB"))
         self.controls.gain.set_handler(lambda v: self.set_gain(v))
+        self.controls.gain.help = "Analog sensor gain"
 
         ctrl_min, ctrl_max, ctrl_default = limits["ExposureValue"]
         self.controls.add(StateControl("auto-exposure-compensation", ctrl_default, ctrl_min, ctrl_max, unit="EV"), key="aec")
         self.controls.aec.set_handler(lambda v: self.set_ev(v))
+        self.controls.aec.help = "The auto-exposure compensation value to bias the auto exposure algorithm brighter or darker"
 
 
     def start(self):
@@ -249,8 +252,7 @@ class Camera:
     def loop(self):
         start = time.time()
         self.state = self.cam.capture_metadata()
-        self.api.update_state(self.cam.capture_metadata())
-        self.api.do_work()
+        self.api.update()
         self.ui.update_state(self.cam.capture_metadata())
         self.ui_hdmi.update_state(self.cam.capture_metadata())
         if self.config.aux.output != 'disabled' and self.config.aux.purpose != 'clean':

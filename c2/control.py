@@ -51,7 +51,7 @@ class StateValue:
 
 
 class StateControl:
-    def __init__(self, name, value=None, minv=None, maxv=None, readonly=False, unit=None, mapper=None):
+    def __init__(self, name, value=None, minv=None, maxv=None, readonly=False, unit=None, mapper=None, help=None):
         self.mapper = mapper
 
         if mapper is not None:
@@ -69,6 +69,7 @@ class StateControl:
         self.max = StateValue(maxv)
 
         self.handler = None
+        self.help = help
 
     def set_handler(self, fun):
         self.handler = fun
