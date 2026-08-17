@@ -14,34 +14,53 @@ class MisirkaAPI:
         self.msk.set_docs("ConfCam", descr="A Conference streaming camera")
 
         def handle_call(control, value):
-            print("MISIRKA")
             control.set(value, front=True)
-            return "ok!"
+            return "ok"
 
         for name in controls:
             control = controls[name]
+            name = control.name
             if control.help is not None:
                 desc = control.help
             else:
                 desc = control.name
             desc += ".\n\n"
-            if control.unit:
+            if control.unit and control.min.value is not None:
                 desc += f"Range: {control.min} {control.unit} - {control.max} {control.unit}\n"
-            else:
+            elif control.min.value is not None:
                 desc += f"Range: {control.min} - {control.max}\n"
-            self.msk.add_topic(name, desc, [control.value.value], True)
+            if control.choices is not None:
+                desc += "Choices: " + ", ".join(control.choices)
+            examples = [control.value.value]
+            if control.choices is not None:
+                examples = control.choices
+            self.msk.add_topic(name, desc, examples, True)
             self.msk.publish(name, control.value.value)
-            self.msk.add_call_kw(f"set-{name}", handler=partial(handle_call, control), descr=desc, examples=[
-                ({"value": control.value.value}, "ok")
-            ])
+
+            if control.min.value is not None and control.max.value is not None:
+                self.msk.add_topic(f"{name}-min", f"Minimum value for {name}", [control.min.value], True)
+                self.msk.publish(f"{name}-min", control.min.value)
+                self.msk.add_topic(f"{name}-max", f"Maximum value for {name}", [control.max.value], True)
+                self.msk.publish(f"{name}-max", control.max.value)
+
+            if not control.readonly:
+                self.msk.add_call_kw(f"set-{name}", handler=partial(handle_call, control), descr=desc, examples=[
+                    ({"value": control.value.value}, "ok")
+                ])
 
         self.run()
 
     def update(self):
         for name in self.controls:
             control = self.controls[name]
+            name = control.name
             if control.value.once("misirka"):
                 self.msk.publish(name, control.value.value)
+            if control.min.value is not None and control.max.value is not None:
+                if control.min.once("misirka"):
+                    self.msk.publish(f"{name}-min", control.min.value)
+                if control.max.once("misirka"):
+                    self.msk.publish(f"{name}-max", control.max.value)
 
     def run(self):
         self.msk.serve()

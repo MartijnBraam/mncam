@@ -51,7 +51,7 @@ class StateValue:
 
 
 class StateControl:
-    def __init__(self, name, value=None, minv=None, maxv=None, readonly=False, unit=None, mapper=None, help=None):
+    def __init__(self, name, value=None, minv=None, maxv=None, readonly=False, unit=None, mapper=None, help=None, choices=None):
         self.mapper = mapper
 
         if mapper is not None:
@@ -70,6 +70,7 @@ class StateControl:
 
         self.handler = None
         self.help = help
+        self.choices = choices
 
     def set_handler(self, fun):
         self.handler = fun
@@ -89,6 +90,12 @@ class StateControl:
 
     def __repr__(self):
         return f'<StateControl {self.name}={self.value} {self.unit} [{self.min} - {self.max}]>'
+
+    def __str__(self):
+        return str(self.value)
+
+    def __bool__(self):
+        return bool(self.value.value)
 
 
 class ControlCollection(dict):
