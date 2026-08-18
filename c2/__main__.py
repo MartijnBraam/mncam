@@ -183,6 +183,22 @@ class Camera:
         self.controls.tally.set_handler(lambda v: self.set_tally(v))
         self.controls.tally.help = "The state of the tally indicator"
 
+        self.controls.add(StateControl("cc-lift", 0.0, -1.0, 1.0), key="cc_lift")
+        self.controls.cc_lift.set_handler(lambda v: self.set_lift(v))
+        self.controls.cc_lift.help = "Color corrector lift"
+
+        self.controls.add(StateControl("cc-gamma", 0.0, -1.5, 10.0), key="cc_gamma")
+        self.controls.cc_gamma.set_handler(lambda v: self.set_gamma(v))
+        self.controls.cc_gamma.help = "Color corrector gamma"
+
+        self.controls.add(StateControl("cc-gain", 1.0, 0.0, 2.0), key="cc_gain")
+        self.controls.cc_gain.set_handler(lambda v: self.set_cc_gain(v))
+        self.controls.cc_gain.help = "Color corrector lift"
+
+        self.controls.add(StateControl("cc-offset", 0.0, -2, 2), key="cc_offset")
+        self.controls.cc_offset.set_handler(lambda v: self.set_cc_offset(v))
+        self.controls.cc_offset.help = "Color corrector offset"
+
     def start(self):
         self.cam.start_preview(self.drm)
         self.cam.start()
@@ -343,25 +359,25 @@ class Camera:
         self.cam.set_controls({"AwbEnable": enabled})
 
     def update_gamma_curve(self):
-        curve = generate_curve(self.ui.cc_lift.value, self.ui.cc_gamma.value, self.ui.cc_gain.value,
-                               self.ui.cc_offset.value)
+        curve = generate_curve(self.controls.cc_lift.value.value, self.controls.cc_gamma.value.value,
+                               self.controls.cc_gain.value.value, self.controls.cc_offset.value.value)
         set_isp_gamma(self.isp, curve)
 
     def set_gamma(self, gamma):
         """ Set gamma in the scale of the bmd primary color corrector (0 = linear) """
-        self.ui.cc_gamma.set(gamma)
+        self.controls.cc_gamma.set(gamma, front=False)
         self.update_gamma_curve()
 
     def set_lift(self, lift):
-        self.ui.cc_lift.set(lift)
+        self.controls.cc_lift.set(lift, front=False)
         self.update_gamma_curve()
 
     def set_cc_gain(self, gain):
-        self.ui.cc_gain.set(gain)
+        self.controls.cc_gain.set(gain, front=False)
         self.update_gamma_curve()
 
     def set_cc_offset(self, offset):
-        self.ui.cc_offset.set(offset)
+        self.controls.cc_offset.set(offset, front=False)
         self.update_gamma_curve()
 
     def set_ev(self, compensation):

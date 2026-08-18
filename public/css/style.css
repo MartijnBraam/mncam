@@ -47,6 +47,14 @@ panel section {
   padding-bottom: 10px;
   border-bottom: 1px solid black;
 }
+panel section > label {
+  text-align: center;
+  font-variant: small-caps;
+  color: #ccc;
+  display: block;
+  font-size: 0.8em;
+  font-weight: bold;
+}
 iframe {
   width: 100%;
   height: 100%;
@@ -62,7 +70,8 @@ group label {
   font-weight: bold;
   grid-area: 1/1/2/3;
 }
-group input[type=range] {
+group input[type=range],
+group button {
   grid-area: 2/1/3/2;
 }
 group span {
@@ -71,5 +80,18 @@ group span {
 group input[type=text],
 group div {
   grid-area: 2/1/3/3;
+}
+group button {
+  border: 1px solid black;
+  border-radius: 4px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  background: linear-gradient(#ffffff, #e8e8e8);
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+group button.active {
+  background: linear-gradient(#ffc144, #e7af40);
+  color: black;
 }
 /*# sourceMappingURL=style.css.map */

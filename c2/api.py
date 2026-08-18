@@ -8,6 +8,7 @@ class MisirkaAPI:
         self.controls = controls
         self.msk = MskSrv("/usr/local/bin/mkspipe", {
             "http": {"bind": ":8899"},
+            "ws": {"enable": True},
             "mqtt": {"enable": True, "brokerurl": "tcp://127.0.0.1:1883", "prefix": "c2/"}
         })
         self.msk.open()
