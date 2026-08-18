@@ -68,7 +68,7 @@ class SensorConfig:
 
 class AudioConfig:
     def __init__(self):
-        self.input_device = 'sndmncamadc'
+        self.input_device = 'sndc2audioadc'
         self.output_device = 'vc4hdmi0'
         self.left_source = 'XLR1 [DIFF]'
         self.right_source = 'XLR2 [DIFF]'

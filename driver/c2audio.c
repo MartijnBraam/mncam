@@ -156,7 +156,7 @@ static struct snd_soc_dai_link snd_c2audio_adc_dai[] = {
 	.name		= "C2 ADC",
 	.stream_name	= "C2 ADC HiFi",
 	.dai_fmt	= SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
-				SND_SOC_DAIFMT_CBP_CFC,
+				SND_SOC_DAIFMT_CBC_CFC,
 	.ops		= &snd_c2audio_adc_ops,
 	.init		= snd_c2audio_adc_init,
 	SND_SOC_DAILINK_REG(hifi),
