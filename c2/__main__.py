@@ -199,6 +199,14 @@ class Camera:
         self.controls.cc_offset.set_handler(lambda v: self.set_cc_offset(v))
         self.controls.cc_offset.help = "Color corrector offset"
 
+        self.controls.add(StateControl("fps", self.config.sensor.framerate, 24, 60))
+        self.controls.fps.set_handler(lambda v: self.set_fps(v))
+        self.controls.fps.help = "Image pipeline framerate"
+
+
+        self.controls.add(StateControl("sensor", self.cam.camera_properties["Model"], readonly=True))
+        self.controls.add(StateControl("camera-id", None), key="camera_id")
+
     def start(self):
         self.cam.start_preview(self.drm)
         self.cam.start()
@@ -307,8 +315,7 @@ class Camera:
         if self.debounce > 60:
             self.debounce = 0
             self.edid = check_edid()
-            self.ui.camera_id.set(self.edid.camera_id)
-            self.ui_hdmi.camera_id.set(self.edid.camera_id)
+            self.controls.camera_id.set(self.edid.camera_id, front=False)
         self.debounce += 1
         time.sleep(max(1.0 / 30 - (time.time() - start), 0))
 
@@ -473,11 +480,10 @@ class Camera:
         self.cam.set_controls({"ExposureTime": et})
 
     def set_fps(self, fps):
-        self.ui.fps.set(fps)
+        self.controls.fps.set(fps, front=False)
         self.cam.set_controls({"FrameRate": fps})
         self.out_dsi.set_fps(fps)
         self.out_hdmi.set_fps(fps)
-        self.ui.min_shutter.set(fps)
 
     def set_tally(self, mask):
         self.controls.tally.set(mask, front=False)

@@ -1,6 +1,4 @@
 import datetime
-import math
-import os.path
 import queue
 import socket
 
@@ -34,9 +32,7 @@ class UI:
             self.max_focus = StateNumber(ctrl_max)
 
         # Camera state
-        self.fps = StateNumber(self.config.sensor.framerate)
         self.tc = StateNumber()
-        self.camera_id = StateNumber()
         self.af = StateNumber("C")
         self.af_pos = StateNumber((0.5, 0.5))
         self.focus = StateNumber(0.0)
@@ -107,7 +103,7 @@ class UI:
                     handler=lambda v: self.tab_state.toggle("ae"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "ae")
 
-        l.add_label(Layout.TOPLEFT, 80, "FPS", "{}", self.fps, align="left",
+        l.add_label(Layout.TOPLEFT, 80, "FPS", "{}", self.controls.fps.value, align="left",
                     handler=lambda v: self.tab_state.toggle("fps"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "fps")
         l.add_label(Layout.TOPLEFT, 100, "Shutter", "1/{}", self.controls.shutter.value, align="left", name="shutter",
@@ -117,7 +113,7 @@ class UI:
                     handler=lambda v: self.tab_state.toggle("gain"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "gain")
         l.add_label(Layout.TOPMIDDLE, 200, "Timecode", "{}", self.tc, None, "middle")
-        l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
+        l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.controls.camera_id.value, None, "left")
 
         l.compute()
 
@@ -128,7 +124,7 @@ class UI:
                     handler=lambda v: self.tab_state.toggle("ae"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "ae")
 
-        l.add_label(Layout.TOPLEFT, 80, "FPS", "{}", self.fps, align="left",
+        l.add_label(Layout.TOPLEFT, 80, "FPS", "{}", self.controls.fps.value, align="left",
                     handler=lambda v: self.tab_state.toggle("fps"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "fps")
         l.add_label(Layout.TOPLEFT, 100, "Shutter", "1/{}", self.controls.shutter.value, align="left", name="shutter",
@@ -149,7 +145,7 @@ class UI:
                     handler=lambda v: self.tab_state.toggle("wb"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "wb")
 
-        l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.camera_id, None, "left")
+        l.add_label(Layout.TOPRIGHT, 100, "Camera ID", "{}", self.controls.camera_id.value, None, "left")
         l.add_button(Layout.TOPRIGHT, 64, "\uf013", StateNumber(False),
                      lambda v: self.open_settings(True))
 
@@ -188,12 +184,12 @@ class UI:
 
         # FPS control panel
         fps_panel = VBox(name="fps")
-        fps_panel.add(RadioRow("Framerate", self.fps, options={
+        fps_panel.add(RadioRow("Framerate", self.controls.fps.value, options={
             24: "24",
             25: "25",
             30: "30",
             60: "60",
-        }, handler=lambda v: self.cam.set_fps(v),
+        }, handler=lambda v: self.controls.fps.set(v),
                                background=(0, 0, 0, 80)))
         fps_panel.compute()
         l.add_widget(Layout.MIDDLE, fps_panel)
