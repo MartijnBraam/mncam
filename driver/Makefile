@@ -1,4 +1,4 @@
-obj-m := mncamaudio.o
+obj-m := c2audio.o
 KDIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
 

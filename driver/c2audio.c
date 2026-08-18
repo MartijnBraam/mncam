@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * ASoC Driver for the MNCAM audio board
+ * ASoC Driver for the C2 audio board
  *
  * Author:  Martijn Braam <martijn@brixit.nl>
  * Based on the hifiberry driver from Joerg Schambacher <joerg@hifiberry.com>
@@ -107,7 +107,7 @@ static int pcm1863_add_controls(struct snd_soc_component *component)
 	return 0;
 }
 
-static int snd_mncam_adc_init(struct snd_soc_pcm_runtime *rtd)
+static int snd_c2audio_adc_init(struct snd_soc_pcm_runtime *rtd)
 {
 	struct snd_soc_dai *codec_dai = snd_soc_rtd_to_codec(rtd, 0);
 	struct snd_soc_component *adc = codec_dai->component;
@@ -126,7 +126,7 @@ static int snd_mncam_adc_init(struct snd_soc_pcm_runtime *rtd)
 	return 0;
 }
 
-static int snd_mncam_adc_hw_params(
+static int snd_c2audio_adc_hw_params(
 	struct snd_pcm_substream *substream, struct snd_pcm_hw_params *params)
 {
 	int ret = 0;
@@ -142,8 +142,8 @@ static int snd_mncam_adc_hw_params(
 }
 
 /* machine stream operations */
-static const struct snd_soc_ops snd_mncam_adc_ops = {
-	.hw_params = snd_mncam_adc_hw_params,
+static const struct snd_soc_ops snd_c2audio_adc_ops = {
+	.hw_params = snd_c2audio_adc_hw_params,
 };
 
 SND_SOC_DAILINK_DEFS(hifi,
@@ -151,38 +151,38 @@ SND_SOC_DAILINK_DEFS(hifi,
 	DAILINK_COMP_ARRAY(COMP_CODEC("pcm186x.1-004a", "pcm1863-aif")),
 	DAILINK_COMP_ARRAY(COMP_PLATFORM("bcm2708-i2s.0")));
 
-static struct snd_soc_dai_link snd_mncam_adc_dai[] = {
+static struct snd_soc_dai_link snd_c2audio_adc_dai[] = {
 {
-	.name		= "MNCAM ADC",
-	.stream_name	= "MNCAM ADC HiFi",
+	.name		= "C2 ADC",
+	.stream_name	= "C2 ADC HiFi",
 	.dai_fmt	= SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
-				SND_SOC_DAIFMT_CBS_CFS,
-	.ops		= &snd_mncam_adc_ops,
-	.init		= snd_mncam_adc_init,
+				SND_SOC_DAIFMT_CBP_CFC,
+	.ops		= &snd_c2audio_adc_ops,
+	.init		= snd_c2audio_adc_init,
 	SND_SOC_DAILINK_REG(hifi),
 },
 };
 
 /* audio machine driver */
-static struct snd_soc_card snd_mncam_adc = {
-	.name         = "snd_mncam_adc",
-	.driver_name  = "MNCAMAudio",
+static struct snd_soc_card snd_c2audio_adc = {
+	.name         = "snd_c2audio_adc",
+	.driver_name  = "C2Audio",
 	.owner        = THIS_MODULE,
-	.dai_link     = snd_mncam_adc_dai,
-	.num_links    = ARRAY_SIZE(snd_mncam_adc_dai),
+	.dai_link     = snd_c2audio_adc_dai,
+	.num_links    = ARRAY_SIZE(snd_c2audio_adc_dai),
 };
 
-static int snd_mncam_adc_probe(struct platform_device *pdev)
+static int snd_c2audio_adc_probe(struct platform_device *pdev)
 {
 	int ret = 0, i = 0;
-	struct snd_soc_card *card = &snd_mncam_adc;
+	struct snd_soc_card *card = &snd_c2audio_adc;
 
-	snd_mncam_adc.dev = &pdev->dev;
+	snd_c2audio_adc.dev = &pdev->dev;
 	if (pdev->dev.of_node) {
 		struct device_node *i2s_node;
 		struct snd_soc_dai_link *dai;
 
-		dai = &snd_mncam_adc_dai[0];
+		dai = &snd_c2audio_adc_dai[0];
 		i2s_node = of_parse_phandle(pdev->dev.of_node,
 			"i2s-controller", 0);
 		if (i2s_node) {
@@ -194,7 +194,7 @@ static int snd_mncam_adc_probe(struct platform_device *pdev)
 			}
 		}
 	}
-	ret = snd_soc_register_card(&snd_mncam_adc);
+	ret = snd_soc_register_card(&snd_c2audio_adc);
 	if (ret && ret != -EPROBE_DEFER)
 		dev_err(&pdev->dev,
 			"snd_soc_register_card() failed: %d\n", ret);
@@ -202,24 +202,24 @@ static int snd_mncam_adc_probe(struct platform_device *pdev)
 	return ret;
 }
 
-static const struct of_device_id snd_mncam_adc_of_match[] = {
-	{ .compatible = "fosdem,mncam-adc", },
+static const struct of_device_id snd_c2audio_adc_of_match[] = {
+	{ .compatible = "fosdem,c2audio-adc", },
 	{},
 };
 
-MODULE_DEVICE_TABLE(of, snd_mncam_adc_of_match);
+MODULE_DEVICE_TABLE(of, snd_c2audio_adc_of_match);
 
-static struct platform_driver snd_mncam_adc_driver = {
+static struct platform_driver snd_c2audio_adc_driver = {
 	.driver = {
-		.name   = "snd-mncam-adc",
+		.name   = "snd-c2audio-adc",
 		.owner  = THIS_MODULE,
-		.of_match_table = snd_mncam_adc_of_match,
+		.of_match_table = snd_c2audio_adc_of_match,
 	},
-	.probe          = snd_mncam_adc_probe,
+	.probe          = snd_c2audio_adc_probe,
 };
 
-module_platform_driver(snd_mncam_adc_driver);
+module_platform_driver(snd_c2audio_adc_driver);
 
 MODULE_AUTHOR("Martijn Braam <martijn@brixit.nl.");
-MODULE_DESCRIPTION("ASoC Driver for MNCAM ADC");
+MODULE_DESCRIPTION("ASoC Driver for C2 ADC");
 MODULE_LICENSE("GPL");

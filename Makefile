@@ -5,7 +5,7 @@ PREFIX := /usr/local
 all: overlays driver
 
 .PHONY: overlays
-overlays: overlay/mncam-proto3.dtbo
+overlays: overlay/c2audio.dtbo
 
 .PHONY: driver
 driver:
@@ -17,9 +17,9 @@ driver:
 
 .PHONY: install-overlays
 install-overlays: overlays
-	cp -v overlay/mncam-proto3.dtbo /boot/firmware/overlays/
+	cp -v overlay/c2audio.dtbo /boot/firmware/overlays/
 
 .PHONY: install-driver
 install-driver: driver
-	@cp -v driver/mncamaudio.ko /lib/modules/$(shell uname -r)/kernel/sound/soc/bcm
+	@cp -v driver/c2audio.ko /lib/modules/$(shell uname -r)/kernel/sound/soc/bcm
 	depmod -a
