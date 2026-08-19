@@ -44,8 +44,12 @@ panel {
 panel section {
   margin-top: 10px;
   margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid black;
+  border: 1px solid black;
+  position: relative;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 panel section > label {
   text-align: center;
@@ -54,6 +58,32 @@ panel section > label {
   display: block;
   font-size: 0.8em;
   font-weight: bold;
+  text-shadow: 1px 1px 0 black;
+}
+panel section .reset {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: 1px solid transparent;
+  color: #ccc;
+  font-weight: bold;
+  border-radius: 3px;
+  width: 20px;
+  height: 20px;
+  line-height: 10px;
+}
+panel section .reset:hover {
+  border: 1px solid black;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+panel section .reset:active {
+  border: 1px solid black;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 iframe {
   width: 100%;
@@ -83,12 +113,14 @@ group div {
 }
 group button {
   border: 1px solid black;
-  border-radius: 4px;
   padding-top: 5px;
   padding-bottom: 5px;
-  background: linear-gradient(#ffffff, #e8e8e8);
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
   margin-top: 5px;
   margin-bottom: 5px;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 group button.active {
   background: linear-gradient(#ffc144, #e7af40);

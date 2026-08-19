@@ -256,6 +256,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }).dom());
 
     section = document.createElement("section");
+    let reset = document.createElement("button");
+    reset.innerText = "\u238C";
+    reset.classList.add("reset");
+    reset.title = "Reset Primary Corrector";
+    reset.addEventListener("click", (event) => {
+        event.preventDefault();
+        misirka.call_unsafe("cc-reset", {});
+    })
+    section.appendChild(reset)
+
     label = document.createElement("label");
     label.innerText = "Primary Corrector";
     section.appendChild(label);

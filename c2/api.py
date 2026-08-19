@@ -1,3 +1,4 @@
+import inspect
 from functools import partial
 
 from misirka.srv_wrapper.syncserver import MskSrv
@@ -49,6 +50,13 @@ class MisirkaAPI:
                     ({"value": control.value.value}, "ok")
                 ])
 
+        for name, help, cb in controls.actions:
+            spec = inspect.getfullargspec(cb)
+            if len(spec.args) == 0 or (len(spec.args) == 1 and spec.args[0] == 'self'):
+                callback = lambda args: cb()
+            else:
+                callback = cb
+            self.msk.add_call(name, callback, help, [({}, "ok")])
         self.run()
 
     def update(self):

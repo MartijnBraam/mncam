@@ -203,9 +203,17 @@ class Camera:
         self.controls.fps.set_handler(lambda v: self.set_fps(v))
         self.controls.fps.help = "Image pipeline framerate"
 
-
         self.controls.add(StateControl("sensor", self.cam.camera_properties["Model"], readonly=True))
         self.controls.add(StateControl("camera-id", None), key="camera_id")
+
+        self.controls.add_action("cc-reset", "Reset the primary color corrector", self.cc_reset)
+
+    def cc_reset(self):
+        self.controls.cc_lift.set(0.0)
+        self.controls.cc_gamma.set(0.0)
+        self.controls.cc_gain.set(1.0)
+        self.controls.cc_offset.set(0.0)
+        return "reset"
 
     def start(self):
         self.cam.start_preview(self.drm)

@@ -51,7 +51,8 @@ class StateValue:
 
 
 class StateControl:
-    def __init__(self, name, value=None, minv=None, maxv=None, readonly=False, unit=None, mapper=None, help=None, choices=None):
+    def __init__(self, name, value=None, minv=None, maxv=None, readonly=False, unit=None, mapper=None, help=None,
+                 choices=None):
         self.mapper = mapper
 
         if mapper is not None:
@@ -99,10 +100,17 @@ class StateControl:
 
 
 class ControlCollection(dict):
+    def __init__(self):
+        super().__init__()
+        self.actions = []
+
     def add(self, control: StateControl, key=None):
         if key is None:
             key = control.name
         self[key] = control
+
+    def add_action(self, name, help, callback):
+        self.actions.append((name, help, callback))
 
     def __getattr__(self, name) -> StateControl:
         return self[name]
