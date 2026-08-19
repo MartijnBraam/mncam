@@ -106,6 +106,9 @@ group button {
 }
 group span {
   grid-area: 2/2/3/3;
+  align-content: center;
+  text-align: right;
+  font-size: 0.9em;
 }
 group input[type=text],
 group div {
@@ -123,7 +126,42 @@ group button {
   box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 group button.active {
-  background: linear-gradient(#ffc144, #e7af40);
-  color: black;
+  background: #0b82d0;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 0 0 8px 0 rgba(75, 178, 246, 0.4);
+}
+slider {
+  display: block;
+  height: 28px;
+  position: relative;
+}
+slider track {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.75);
+  height: 3px;
+  top: 12.5px;
+  left: 8px;
+  right: 8px;
+  border-radius: 1.5px;
+}
+slider track level {
+  display: block;
+  height: 100%;
+  background: #0b82d0;
+  border-top-left-radius: 1.5px;
+  border-bottom-left-radius: 1.5px;
+}
+slider handle {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: #555;
+  border: 1px solid black;
+  position: absolute;
+  top: 6px;
+}
+slider handle:hover {
+  background: #777;
 }
 /*# sourceMappingURL=style.css.map */

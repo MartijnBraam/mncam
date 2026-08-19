@@ -7,8 +7,19 @@ class MisirkaSlider {
 
         this.node = undefined;
         this.value = undefined;
+        this.level = undefined;
 
+        this.handle = undefined;
+
+        // Slider state
         this._val = undefined;
+        this._min = 0;
+        this._max = 100;
+        this._scale = 1;
+        this._dx = 0;
+        this._dv = 0;
+        this._ev_move = undefined;
+        this._ev_up = undefined;
 
         const self = this;
         client.on_alive(() => {
@@ -29,18 +40,44 @@ class MisirkaSlider {
         switch (key) {
             case this.topic:
                 this._val = value;
-                this.node.value = value;
                 this.value.innerText = this.formatter(value);
                 break;
             case this.topic + "-min":
-                this.node.min = value;
+                this._min = value;
                 this.node.value = this._val;
                 break;
             case this.topic + "-max":
-                this.node.max = value;
+                this._max = value;
                 this.node.value = this._val;
                 break;
         }
+        this._update_handle();
+    }
+
+    _update_handle() {
+        const size = this.handle.offsetWidth;
+        const length = this.node.offsetWidth;
+        const fraction = (this._val - this._min) / (this._max - this._min);
+        const pos = fraction * (length - size);
+        this.handle.style.left = pos + "px";
+        this.level.style.width = (fraction * 100) + "%";
+        this._scale = (this._max - this._min) / (length - size);
+    }
+
+    _mouse_move(event) {
+        let speed = 1;
+        if (event.getModifierState("Control")) {
+            speed = 0.1;
+        }
+        const offset = event.clientX - this._dx;
+        const val = (offset * this._scale * speed) + this._dv;
+        const clamped = Math.min(Math.max(val, this._min), this._max);
+        this.client.call_unsafe("set-" + this.topic, {"value": clamped});
+    }
+
+    _mouse_up(event) {
+        document.removeEventListener("mousemove", this._ev_move);
+        document.removeEventListener("mouseup", this._ev_up);
     }
 
     dom() {
@@ -52,17 +89,37 @@ class MisirkaSlider {
         label.innerText = this.label;
         group.appendChild(label);
 
-        const slider = document.createElement("input");
-        slider.type = "range";
-        slider.id = this.topic;
-        slider.step = "0.02";
-        slider.disabled = true;
+        const slider = document.createElement("slider");
+        const track = document.createElement("track");
+        const level = document.createElement("level");
+        track.appendChild(level);
+        const handle = document.createElement("handle");
+        slider.appendChild(track);
+        slider.appendChild(handle);
         this.node = slider;
+        this.handle = handle;
+        this.level = level;
         group.appendChild(slider);
 
-        slider.addEventListener("click", (event) => {
+        handle.addEventListener("mousedown", (event) => {
             event.preventDefault();
-            this.client.call_unsafe("set-" + this.topic, {"value": parseFloat(slider.value)});
+            this._dx = event.pageX;
+            this._dv = this._val;
+
+            this._ev_move = this._mouse_move.bind(this);
+            this._ev_up = this._mouse_up.bind(this);
+            document.addEventListener("mousemove", this._ev_move);
+            document.addEventListener("mouseup", this._ev_up);
+        });
+        handle.addEventListener("click", (event) => {
+            event.stopPropagation()
+        });
+
+        slider.addEventListener("click", (event) => {
+            const size = this.handle.offsetWidth;
+            const val = (event.offsetX - (size / 2)) * this._scale + this._min;
+            const clamped = Math.min(Math.max(val, this._min), this._max);
+            this.client.call_unsafe("set-" + this.topic, {"value": clamped});
         });
 
         const val = document.createElement("span");
