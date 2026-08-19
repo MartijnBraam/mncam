@@ -99,7 +99,8 @@ class UI:
 
     def _create_hdmi_layout(self):
         l: Layout = self.screens["main"]
-        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.controls.aec.value, align="left", name="ae",
+        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.controls.aec.value, align="left",
+                    name="ae",
                     handler=lambda v: self.tab_state.toggle("ae"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "ae")
 
@@ -120,7 +121,8 @@ class UI:
     def _create_main_layout(self):
         l: Layout = self.screens["main"]
 
-        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.controls.aec.value, align="left", name="ae",
+        l.add_label(Layout.TOPLEFT, 120, "Auto Exposure", "{0:.1f} EV", self.controls.aec.value, align="left",
+                    name="ae",
                     handler=lambda v: self.tab_state.toggle("ae"),
                     button_state=self.tab_state, state_cmp=lambda s: s == "ae")
 
@@ -199,6 +201,19 @@ class UI:
         ae_panel.add(ControlSlider("AE Comp", self.controls.aec, background=(0, 0, 0, 80)))
         ae_panel.add(ToggleRow("Auto Exposure", self.controls.ae.value, handler=lambda v: self.controls.ae.set(v),
                                background=(0, 0, 0, 80)))
+        ae_panel.add(RadioRow("Constraint", self.controls.ae_constraint.value, options={
+            "normal": "Normal",
+            "highlight": "Highlights",
+            "shadows": "Shadows",
+        }, handler=lambda v: self.controls.ae_constraint.set(v),
+                              background=(0, 0, 0, 80)))
+        ae_panel.add(RadioRow("Metering", self.controls.ae_metering.value, options={
+            "matrix": "Matrix",
+            "center": "Center-weight",
+            "spot": "Spot",
+        }, handler=lambda v: self.controls.ae_metering.set(v),
+                              background=(0, 0, 0, 80)))
+
         ae_panel.compute()
         l.add_widget(Layout.MIDDLE, ae_panel)
 
@@ -388,8 +403,10 @@ class UI:
 
         if self.controls.ae.value.once("update_state"):
             self.screens["main"]["gain"].color_text = (128, 128, 128, 255) if self.controls.ae else (255, 255, 255, 255)
-            self.screens["main"]["shutter"].color_text = (128, 128, 128, 255) if self.controls.ae else (255, 255, 255, 255)
-            self.screens["main"]["ae"].color_text = (128, 128, 128, 255) if not self.controls.ae else (255, 255, 255, 255)
+            self.screens["main"]["shutter"].color_text = (128, 128, 128, 255) if self.controls.ae else (255, 255, 255,
+                                                                                                        255)
+            self.screens["main"]["ae"].color_text = (128, 128, 128, 255) if not self.controls.ae else (255, 255, 255,
+                                                                                                       255)
 
         buf = self.screens[self.active_screen].render()
         if buf is not None:

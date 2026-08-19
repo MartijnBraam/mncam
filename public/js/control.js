@@ -309,9 +309,9 @@ document.addEventListener("DOMContentLoaded", function () {
         shadows: "Shadows",
     }).dom());
     section.appendChild(new MisirkaRadio(misirka, "ae-metering", "Metering", {
+        matrix: "Matrix",
         center: "Center-weight",
         spot: "Spot",
-        matrix: "Matrix",
     }).dom());
     section.appendChild(new MisirkaSlider(misirka, "auto-exposure-compensation", "Auto Exposure Compensation", fmt`{0f} EV`).dom());
     section.appendChild(new MisirkaSlider(misirka, "gain", "Gain", fmt`{0f} dB`).dom());
