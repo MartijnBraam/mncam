@@ -205,10 +205,11 @@ class MisirkaRadio {
         }
 
         const self = this;
-        client.on_alive(function () {
+        client.on_alive(() => {
             client.subscribe_unsafe([topic], (key, value) => {
                 self._on_message(key, value)
             });
+            this.node.classList.remove("disabled");
         });
         client.on_dead(() => {
             this.node.classList.add("disabled");
