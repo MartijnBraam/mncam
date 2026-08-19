@@ -364,6 +364,15 @@ document.addEventListener("DOMContentLoaded", function () {
     section.appendChild(new MisirkaSlider(misirka, "cc-offset", "Offset", fmt`{3f}`).dom());
 
     section = document.createElement("section");
+    reset = document.createElement("button");
+    reset.innerText = "\u238C";
+    reset.classList.add("reset");
+    reset.title = "Reset Secondary Corrector";
+    reset.addEventListener("click", (event) => {
+        event.preventDefault();
+        misirka.call_unsafe("sc-reset", {});
+    })
+    section.appendChild(reset)
     label = document.createElement("label");
     label.innerText = "Secondary Corrector";
     section.appendChild(label);
