@@ -126,6 +126,10 @@ group button {
   border-radius: 3px;
   box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
 }
+group button.disabled {
+  border: 1px solid #202020;
+  color: #ccc;
+}
 group button.active {
   background: #0b82d0;
   box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 0 0 8px 0 rgba(75, 178, 246, 0.4);
@@ -151,6 +155,18 @@ slider track level {
   border-top-left-radius: 1.5px;
   border-bottom-left-radius: 1.5px;
 }
+slider.disabled track {
+  background: rgba(50, 50, 50, 0.75);
+}
+slider.disabled track level {
+  background: #555;
+}
+slider.disabled handle {
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+slider.disabled handle:hover {
+  background: #555;
+}
 slider handle {
   width: 16px;
   height: 16px;
@@ -161,6 +177,7 @@ slider handle {
   border: 1px solid black;
   position: absolute;
   top: 6px;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 2px 2px 4px 0 rgba(0, 0, 0, 0.2);
 }
 slider handle:hover {
   background: #777;
@@ -169,6 +186,10 @@ form.button-group {
   display: flex;
   margin-top: 5px;
   margin-bottom: 10px;
+}
+form.button-group.disabled label {
+  border-color: #202020;
+  color: #ccc;
 }
 form.button-group input {
   display: none;
@@ -206,5 +227,6 @@ form.button-group label[data-topic="tally"][data-option="1"]:has(input[type="rad
 form.button-group label[data-topic="tally"][data-option="2"]:has(input[type="radio"]:checked) {
   background: limegreen;
   color: black;
+  text-shadow: none;
 }
 /*# sourceMappingURL=style.css.map */

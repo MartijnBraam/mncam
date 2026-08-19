@@ -26,10 +26,10 @@ class MisirkaSlider {
             client.subscribe_unsafe([topic, topic + "-min", topic + "-max"], (key, value) => {
                 self._on_message(key, value)
             });
-            this.node.disabled = false;
+            this.node.classList.remove("disabled");
         });
         client.on_dead(() => {
-            this.node.disabled = true;
+            this.node.classList.add("disabled");
         });
     }
 
@@ -96,6 +96,7 @@ class MisirkaSlider {
         const handle = document.createElement("handle");
         slider.appendChild(track);
         slider.appendChild(handle);
+        slider.classList.add("disabled");
         this.node = slider;
         this.handle = handle;
         this.level = level;
@@ -144,6 +145,10 @@ class MisirkaToggle {
             client.subscribe_unsafe([topic], (key, value) => {
                 self._on_message(key, value)
             });
+            this.node.classList.remove("disabled");
+        });
+        client.on_dead(() => {
+            this.node.classList.add("disabled");
         });
     }
 
@@ -204,6 +209,9 @@ class MisirkaRadio {
             client.subscribe_unsafe([topic], (key, value) => {
                 self._on_message(key, value)
             });
+        });
+        client.on_dead(() => {
+            this.node.classList.add("disabled");
         });
     }
 

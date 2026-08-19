@@ -1,6 +1,7 @@
 @bg: #282828;
 @bgpanel: #2d2d2d;
 @primary: #0b82d0;
+@disabled: #202020;
 
 .bevel() {
   border-radius: 3px;
@@ -143,6 +144,11 @@ group {
     margin-bottom: 5px;
     .bevel();
 
+    &.disabled {
+      border: 1px solid @disabled;
+      color: #ccc;
+    }
+
     &.active {
       background: @primary;
       box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 0 0 8px 0 fade(lighten(@primary, 20%), 40%);
@@ -177,6 +183,24 @@ slider {
     }
   }
 
+  &.disabled {
+    track {
+      background: rgba(50, 50, 50, 0.75);
+
+      level {
+        background: #555;
+      }
+    }
+
+    handle {
+      box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
+
+      &:hover {
+        background: #555;
+      }
+    }
+  }
+
   handle {
     width: @handle-size;
     height: @handle-size;
@@ -186,6 +210,7 @@ slider {
     border: 1px solid black;
     position: absolute;
     top: @slider-height/2 - @handle-size/2;
+    box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 2px 2px 4px 0 rgba(0, 0, 0, 0.2);
 
     &:hover {
       background: #777;
@@ -197,6 +222,14 @@ form.button-group {
   display: flex;
   margin-top: 5px;
   margin-bottom: 10px;
+
+  &.disabled {
+    label {
+      border-color: @disabled;
+      color: #ccc;
+    }
+  }
+
 
   input {
     display: none;
@@ -241,6 +274,7 @@ form.button-group {
   label[data-topic="tally"][data-option="2"]:has(input[type="radio"]:checked) {
     background: limegreen;
     color: black;
+    text-shadow: none;
   }
 
 }

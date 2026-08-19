@@ -66,7 +66,6 @@ class Camera:
                 "NoiseReductionMode": self.config.sensor.noise_reduction_constant,
                 "Sharpness": self.config.sensor.sharpness,
                 "Saturation": self.config.sensor.saturation,
-                "Contrast": self.config.sensor.contrast,
                 "ExposureValue": self.config.sensor.exposure_compensation,
             }, colour_space=ColorSpace.Rec709())
         self.cam.configure(preview_config)
