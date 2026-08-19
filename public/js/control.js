@@ -337,6 +337,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     section = document.createElement("section");
     label = document.createElement("label");
+    label.innerText = "Secondary Corrector";
+    section.appendChild(label);
+    controls.appendChild(section);
+    section.appendChild(new MisirkaSlider(misirka, "saturation", "Saturation", fmt`{3f}`).dom());
+    section.appendChild(new MisirkaSlider(misirka, "sharpness", "Sharpness", fmt`{3f}`).dom());
+
+    section = document.createElement("section");
+    label = document.createElement("label");
     label.innerText = "Tally";
     section.appendChild(label);
     controls.appendChild(section);

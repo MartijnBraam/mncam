@@ -208,6 +208,30 @@ class Camera:
 
         self.controls.add_action("cc-reset", "Reset the primary color corrector", self.cc_reset)
 
+        ctrl_min, ctrl_max, ctrl_default = limits["Sharpness"]
+        self.controls.add(StateControl("sharpness", self.config.sensor.sharpness, ctrl_min, ctrl_max))
+        self.controls.sharpness.set_handler(lambda v: self.set_sharpness(v))
+
+        ctrl_min, ctrl_max, ctrl_default = limits["Saturation"]
+        self.controls.add(StateControl("saturation", self.config.sensor.saturation, ctrl_min, 2.0))
+        self.controls.saturation.set_handler(lambda v: self.set_saturation(v))
+
+    def set_sharpness(self, val):
+        self.controls.sharpness.set(val, front=False)
+        self.cam.set_controls({"Sharpness": val})
+
+    def set_saturation(self, val):
+        self.controls.saturation.set(val, front=False)
+        self.cam.set_controls({"Saturation": val})
+
+    def set_contrast(self, val):
+        self.controls.contrast.set(val, front=False)
+        self.cam.set_controls({"Contrast": val})
+
+    def set_brightness(self, val):
+        self.controls.brightness.set(val, front=False)
+        self.cam.set_controls({"Brightness": val})
+
     def cc_reset(self):
         self.controls.cc_lift.set(0.0)
         self.controls.cc_gamma.set(0.0)

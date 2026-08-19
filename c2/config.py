@@ -53,7 +53,6 @@ class SensorConfig:
         self.exposure_compensation = 0.0
         self.sharpness = 1.0
         self.saturation = 1.0
-        self.contrast = 1.0
         self.noise_reduction = "fast"
 
     @property
