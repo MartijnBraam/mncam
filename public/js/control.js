@@ -141,7 +141,7 @@ class MisirkaToggle {
         this.value = undefined;
 
         const self = this;
-        client.on_alive(function () {
+        client.on_alive(() => {
             client.subscribe_unsafe([topic], (key, value) => {
                 self._on_message(key, value)
             });
@@ -303,6 +303,16 @@ document.addEventListener("DOMContentLoaded", function () {
     section.appendChild(label);
     controls.appendChild(section);
     section.appendChild(new MisirkaToggle(misirka, "auto-exposure", "Auto Exposure").dom());
+    section.appendChild(new MisirkaRadio(misirka, "ae-constraint", "Constraint", {
+        normal: "Normal",
+        highlight: "Highlights",
+        shadows: "Shadows",
+    }).dom());
+    section.appendChild(new MisirkaRadio(misirka, "ae-metering", "Metering", {
+        center: "Center-weight",
+        spot: "Spot",
+        matrix: "Matrix",
+    }).dom());
     section.appendChild(new MisirkaSlider(misirka, "auto-exposure-compensation", "Auto Exposure Compensation", fmt`{0f} EV`).dom());
     section.appendChild(new MisirkaSlider(misirka, "gain", "Gain", fmt`{0f} dB`).dom());
     section.appendChild(new MisirkaSlider(misirka, "shutter", "Shutter", fmt`1/{}`).dom());

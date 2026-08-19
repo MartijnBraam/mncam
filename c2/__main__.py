@@ -215,6 +215,18 @@ class Camera:
         self.controls.add(StateControl("saturation", self.config.sensor.saturation, ctrl_min, 2.0))
         self.controls.saturation.set_handler(lambda v: self.set_saturation(v))
 
+        self.controls.add(StateControl("ae-constraint", "normal",
+                                       choices=["normal", "highlight", "shadows"]),
+                          key="ae_constraint")
+        self.controls.ae_constraint.set_handler(lambda v: self.set_ae_constraint(v))
+        self.controls.ae_constraint.help = "Auto-exposure contraint, expose for middle grey, the highlights or the shadows"
+
+        self.controls.add(StateControl("ae-metering", "center",
+                                       choices=["center", "spot", "matrix"]),
+                          key="ae_metering")
+        self.controls.ae_metering.set_handler(lambda v: self.set_ae_metering(v))
+        self.controls.ae_metering.help = "Auto-exposure metering mode sets the spatial weights for measuring the current brightness"
+
     def set_sharpness(self, val):
         self.controls.sharpness.set(val, front=False)
         self.cam.set_controls({"Sharpness": val})
@@ -444,6 +456,24 @@ class Camera:
             self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Daylight})
         elif mode == "cloudy":
             self.cam.set_controls({"AwbMode": libcamera.controls.AwbModeEnum.Cloudy})
+
+    def set_ae_constraint(self, mode):
+        self.controls.ae_constraint.set(mode, front=False)
+        if mode == "normal":
+            self.cam.set_controls({"AeConstraintMode": libcamera.controls.AeConstraintModeEnum.Normal})
+        elif mode == "highlight":
+            self.cam.set_controls({"AeConstraintMode": libcamera.controls.AeConstraintModeEnum.Highlight})
+        elif mode == "shadows":
+            self.cam.set_controls({"AeConstraintMode": libcamera.controls.AeConstraintModeEnum.Shadows})
+
+    def set_ae_metering(self, mode):
+        self.controls.ae_metering.set(mode, front=False)
+        if mode == "center":
+            self.cam.set_controls({"AeMeteringMode": libcamera.controls.AeMeteringModeEnum.CentreWeighted})
+        elif mode == "spot":
+            self.cam.set_controls({"AeMeteringMode": libcamera.controls.AeMeteringModeEnum.Spot})
+        elif mode == "matrix":
+            self.cam.set_controls({"AeMeteringMode": libcamera.controls.AeMeteringModeEnum.Matrix})
 
     def set_whitebalance(self, temperature):
         awb = Picamera2.find_tuning_algo(self.cal, "rpi.awb")
