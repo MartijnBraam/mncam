@@ -206,6 +206,7 @@ class Camera:
         self.controls.add(StateControl("camera-id", None), key="camera_id")
 
         self.controls.add_action("cc-reset", "Reset the primary color corrector", self.cc_reset)
+        self.controls.add_action("exposure-reset", "Reset all the exposure controls", self.exposure_reset)
 
         ctrl_min, ctrl_max, ctrl_default = limits["Sharpness"]
         self.controls.add(StateControl("sharpness", self.config.sensor.sharpness, ctrl_min, ctrl_max))
@@ -248,6 +249,13 @@ class Camera:
         self.controls.cc_gamma.set(0.0)
         self.controls.cc_gain.set(1.0)
         self.controls.cc_offset.set(0.0)
+        return "reset"
+
+    def exposure_reset(self):
+        self.controls.ae.set(True)
+        self.controls.aec.set(0.0)
+        self.controls.ae_constraint.set("normal")
+        self.controls.ae_metering.set("center")
         return "reset"
 
     def start(self):

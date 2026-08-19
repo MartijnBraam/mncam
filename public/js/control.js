@@ -298,6 +298,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Exposure controls
     let section = document.createElement("section");
+    let reset = document.createElement("button");
+    reset.innerText = "\u238C";
+    reset.classList.add("reset");
+    reset.title = "Reset exposure controls to auto";
+    reset.addEventListener("click", (event) => {
+        event.preventDefault();
+        misirka.call_unsafe("exposure-reset", {});
+    })
+    section.appendChild(reset)
+
     let label = document.createElement("label");
     label.innerText = "Exposure";
     section.appendChild(label);
@@ -334,7 +344,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }).dom());
 
     section = document.createElement("section");
-    let reset = document.createElement("button");
+    reset = document.createElement("button");
     reset.innerText = "\u238C";
     reset.classList.add("reset");
     reset.title = "Reset Primary Corrector";
