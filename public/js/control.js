@@ -223,6 +223,7 @@ class MisirkaRadio {
         group.appendChild(label);
 
         const form = document.createElement("form");
+        form.classList.add("button-group");
 
         for (let key of Object.keys(this.choices)) {
             let label = document.createElement("label");
@@ -240,6 +241,8 @@ class MisirkaRadio {
             });
             label.appendChild(radio);
             label.append(this.choices[key]);
+            label.dataset.option = key;
+            label.dataset.topic = this.topic;
             form.appendChild(label);
         }
         group.appendChild(form);

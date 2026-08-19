@@ -111,7 +111,8 @@ group span {
   font-size: 0.9em;
 }
 group input[type=text],
-group div {
+group div,
+group form {
   grid-area: 2/1/3/3;
 }
 group button {
@@ -163,5 +164,47 @@ slider handle {
 }
 slider handle:hover {
   background: #777;
+}
+form.button-group {
+  display: flex;
+  margin-top: 5px;
+  margin-bottom: 10px;
+}
+form.button-group input {
+  display: none;
+}
+form.button-group label {
+  flex: 1;
+  font-weight: normal;
+  font-size: 0.9em;
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid black;
+  padding: 5px 2px;
+  text-align: center;
+  text-shadow: 1px 1px 0 black;
+  border-left-width: 0;
+  border-radius: 3px;
+  box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+}
+form.button-group label:first-child {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-left-width: 1px;
+}
+form.button-group label:last-child {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+form.button-group label:has(input[type="radio"]:checked) {
+  background: rgba(255, 255, 255, 0.4);
+}
+form.button-group label[data-topic="tally"][data-option="1"]:has(input[type="radio"]:checked) {
+  background: red;
+}
+form.button-group label[data-topic="tally"][data-option="2"]:has(input[type="radio"]:checked) {
+  background: limegreen;
+  color: black;
 }
 /*# sourceMappingURL=style.css.map */
