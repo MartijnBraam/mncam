@@ -51,13 +51,16 @@ class MisirkaAPI:
                 ])
 
         for name, help, cb in controls.actions:
-            spec = inspect.getfullargspec(cb)
-            if len(spec.args) == 0 or (len(spec.args) == 1 and spec.args[0] == 'self'):
-                callback = lambda args: cb()
-            else:
-                callback = cb
-            self.msk.add_call(name, callback, help, [({}, "ok")])
+            self._link_action(name, help, cb)
+
         self.run()
+
+    def _link_action(self, name, help, cb):
+        spec = inspect.getfullargspec(cb)
+        if len(spec.args) == 0 or (len(spec.args) == 1 and spec.args[0] == 'self'):
+            self.msk.add_call(name, lambda args: cb(), help, [({}, "ok")])
+        else:
+            self.msk.add_call(name, cb, help, [({}, "ok")])
 
     def update(self):
         for name in self.controls:
