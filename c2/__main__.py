@@ -203,6 +203,7 @@ class Camera:
         self.controls.fps.help = "Image pipeline framerate"
 
         self.controls.add(StateControl("sensor", self.cam.camera_properties["Model"], readonly=True))
+        self.controls.add(StateControl("coretemp", 0.0, readonly=True))
         self.controls.add(StateControl("camera-id", None), key="camera_id")
 
         self.controls.add_action("cc-reset", "Reset the primary color corrector", self.cc_reset)
@@ -373,6 +374,10 @@ class Camera:
             self.debounce = 0
             self.edid = check_edid()
             self.controls.camera_id.set(self.edid.camera_id, front=False)
+
+            with open("/sys/class/thermal/thermal_zone0/temp", "r") as handle:
+                temp = int(handle.read().strip())
+            self.controls.coretemp.set(temp/1000, front=False)
         self.debounce += 1
         time.sleep(max(1.0 / 30 - (time.time() - start), 0))
 

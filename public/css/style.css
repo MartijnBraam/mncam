@@ -229,4 +229,14 @@ form.button-group label[data-topic="tally"][data-option="2"]:has(input[type="rad
   color: black;
   text-shadow: none;
 }
+#stats {
+  width: 100%;
+}
+#stats th {
+  font-weight: bold;
+  text-align: right;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  color: #999;
+}
 /*# sourceMappingURL=style.css.map */

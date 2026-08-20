@@ -392,4 +392,28 @@ document.addEventListener("DOMContentLoaded", function () {
         2: "Preview",
     }).dom());
 
+
+    misirka.on_alive(() => {
+        const statFps = document.getElementById("stat-fps");
+        misirka.subscribe_unsafe(["fps"], (key, value) => {
+            statFps.innerText = value;
+        });
+        const statSensor = document.getElementById("stat-sensor");
+        misirka.subscribe_unsafe(["sensor"], (key, value) => {
+            statSensor.innerText = value;
+        });
+        const statCamID = document.getElementById("stat-camid");
+        misirka.subscribe_unsafe(["camera-id"], (key, value) => {
+            if (value == null) {
+                statCamID.innerText = "N/A";
+            } else {
+                statCamID.innerText = value;
+            }
+        });
+        const statTemp = document.getElementById("stat-temp");
+        misirka.subscribe_unsafe(["coretemp"], (key, value) => {
+            statTemp.innerText = value.toFixed(1) + "\xB0C";
+        });
+
+    });
 });
