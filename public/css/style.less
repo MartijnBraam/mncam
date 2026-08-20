@@ -152,9 +152,27 @@ group {
       color: #ccc;
     }
 
+    &:hover {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    &:active {
+      background: transparent;
+      box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.1);
+    }
+
     &.active {
       background: @primary;
       box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 0 0 8px 0 fade(lighten(@primary, 20%), 40%);
+
+      &:hover {
+        background: lighten(@primary, 5%);
+      }
+
+      &:active {
+        background: darken(@primary, 5%);
+        box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.1);
+      }
     }
   }
 }
@@ -233,6 +251,14 @@ form.button-group {
     }
   }
 
+  &:not(.disabled) label:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &:not(.disabled) label:active {
+    background: transparent;
+    box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.1);
+  }
 
   input {
     display: none;

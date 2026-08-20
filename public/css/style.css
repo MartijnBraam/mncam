@@ -133,9 +133,23 @@ group button.disabled {
   border: 1px solid #202020;
   color: #ccc;
 }
+group button:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+group button:active {
+  background: transparent;
+  box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.1);
+}
 group button.active {
   background: #0b82d0;
   box-shadow: inset 1px 1px 0 0 rgba(255, 255, 255, 0.1), 0 0 8px 0 rgba(75, 178, 246, 0.4);
+}
+group button.active:hover {
+  background: #0c91e8;
+}
+group button.active:active {
+  background: #0a73b8;
+  box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.1);
 }
 slider {
   display: block;
@@ -193,6 +207,13 @@ form.button-group {
 form.button-group.disabled label {
   border-color: #202020;
   color: #ccc;
+}
+form.button-group:not(.disabled) label:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+form.button-group:not(.disabled) label:active {
+  background: transparent;
+  box-shadow: inset -1px -1px 0 0 rgba(255, 255, 255, 0.1);
 }
 form.button-group input {
   display: none;
