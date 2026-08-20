@@ -9,21 +9,23 @@
     <h1>ConfCam</h1>
 </header>
 <hsplit>
-    <panel id="controls">
-        <table id="stats">
-            <tr>
-                <th>Framerate</th>
-                <td id="stat-fps"></td>
-                <th>Camera ID</th>
-                <td id="stat-camid"></td>
-            </tr>
-            <tr>
-                <th>Sensor</th>
-                <td id="stat-sensor"></td>
-                <th>CPU</th>
-                <td id="stat-temp"></td>
-            </tr>
-        </table>
+    <panel>
+        <scroll id="controls">
+            <table id="stats">
+                <tr>
+                    <th>Framerate</th>
+                    <td id="stat-fps"></td>
+                    <th>Camera ID</th>
+                    <td id="stat-camid"></td>
+                </tr>
+                <tr>
+                    <th>Sensor</th>
+                    <td id="stat-sensor"></td>
+                    <th>CPU</th>
+                    <td id="stat-temp"></td>
+                </tr>
+            </table>
+        </scroll>
     </panel>
     <iframe src="/cam/"></iframe>
 </hsplit>

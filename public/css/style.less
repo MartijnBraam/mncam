@@ -54,6 +54,9 @@ panel {
   flex: 1;
   padding: 10px;
   min-width: 400px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #333 @bg;
 
   section {
     margin-top: 10px;
@@ -289,4 +292,9 @@ form.button-group {
     font-size: 0.85em;
     color: #999;
   }
+}
+
+scroll {
+  display: block;
+  max-height: 0;
 }

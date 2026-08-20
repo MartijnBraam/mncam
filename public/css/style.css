@@ -40,6 +40,9 @@ panel {
   flex: 1;
   padding: 10px;
   min-width: 400px;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #333 #282828;
 }
 panel section {
   margin-top: 10px;
@@ -238,5 +241,9 @@ form.button-group label[data-topic="tally"][data-option="2"]:has(input[type="rad
   text-transform: uppercase;
   font-size: 0.85em;
   color: #999;
+}
+scroll {
+  display: block;
+  max-height: 0;
 }
 /*# sourceMappingURL=style.css.map */
