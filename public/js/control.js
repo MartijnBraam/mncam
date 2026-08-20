@@ -448,6 +448,11 @@ document.addEventListener("DOMContentLoaded", function () {
         misirka.subscribe_unsafe(["fps"], (key, value) => {
             statFps.innerText = value;
         });
+        const statDrm = document.getElementById("stat-drm");
+        misirka.subscribe_unsafe(["fps-drm"], (key, value) => {
+            statDrm.innerText = value.toFixed(1);
+        });
+
         const statSensor = document.getElementById("stat-sensor");
         misirka.subscribe_unsafe(["sensor"], (key, value) => {
             statSensor.innerText = value;

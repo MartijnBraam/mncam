@@ -71,7 +71,7 @@ class Camera:
         self.cam.configure(preview_config)
 
         # Enable DRM output of the camera stream to the HDMI output and the DSI display
-        self.drm = DRMOutput(self.config.output.mode[0], self.config.output.mode[1])
+        self.drm = DRMOutput(self.config.output.mode[0], self.config.output.mode[1], self.controls)
         self.out_hdmi = self.drm.use_output(self.output_hdmi, self.config.output.mode[0], self.config.output.mode[1],
                                             self.config.output.framerate, 1)
         self.out_dsi = self.drm.use_output(self.output_ui, self.ui_size[0], self.ui_size[1], None, 6)
@@ -201,6 +201,8 @@ class Camera:
         self.controls.add(StateControl("fps", self.config.sensor.framerate, 24, 60))
         self.controls.fps.set_handler(lambda v: self.set_fps(v))
         self.controls.fps.help = "Image pipeline framerate"
+        self.controls.add(StateControl("fps-drm", 0, readonly=True), key="drm_fps")
+        self.controls.drm_fps.help = "Camera loop framerate"
 
         self.controls.add(StateControl("sensor", self.cam.camera_properties["Model"], readonly=True))
         self.controls.add(StateControl("coretemp", 0.0, readonly=True))

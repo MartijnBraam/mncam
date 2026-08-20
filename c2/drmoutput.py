@@ -1,4 +1,5 @@
 import threading
+import time
 
 import mmap
 import numpy as np
@@ -90,7 +91,7 @@ class Connector:
 
 
 class DRMOutput(NullPreview):
-    def __init__(self, width, height):
+    def __init__(self, width, height, controls):
         self.width = width
         self.height = height
         self.card = pykms.Card()
@@ -100,6 +101,10 @@ class DRMOutput(NullPreview):
         self.current = None
         self.own_current = False
         self.drmfbs = {}
+
+        self.controls = controls
+        self.fps_counter = 0
+        self.fps_time = time.time()
 
         super().__init__(width=width, height=height)
 
@@ -182,6 +187,12 @@ class DRMOutput(NullPreview):
                                   (0, 0, width, height), conn.overlay_pos[i])
 
         ctx.commit_sync()
+        self.fps_counter += 1
+        if time.time() - self.fps_time > 1:
+            fps = self.fps_counter / (time.time() - self.fps_time)
+            self.fps_time = time.time()
+            self.fps_counter = 0
+            self.controls.drm_fps.set(fps, front=False)
         ctx = None
 
     def set_overlay(self, overlay, output=None, num=0):
