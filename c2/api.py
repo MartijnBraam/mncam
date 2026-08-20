@@ -1,4 +1,5 @@
 import inspect
+import json
 from functools import partial
 
 from misirka.srv_wrapper.syncserver import MskSrv
@@ -44,6 +45,11 @@ class MisirkaAPI:
                 self.msk.publish(f"{name}-min", control.min.value)
                 self.msk.add_topic(f"{name}-max", f"Maximum value for {name}", [control.max.value], True)
                 self.msk.publish(f"{name}-max", control.max.value)
+
+            if control.choices is not None:
+                self.msk.add_topic(f"{name}-choices", f"Available choices for {name}", [json.dumps(control.choices)],
+                                   True)
+                self.msk.publish(f"{name}-choices", json.dumps(control.choices))
 
             if not control.readonly:
                 self.msk.add_call_kw(f"set-{name}", handler=partial(handle_call, control), descr=desc, examples=[

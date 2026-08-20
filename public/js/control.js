@@ -195,17 +195,26 @@ class MisirkaRadio {
         this.value = undefined;
         this.numeric = true;
 
-        for (let key of Object.keys(this.choices)) {
-            if (!isNaN(key) && !isNaN(parseFloat(key))) {
-                // Key is a number
-            } else {
-                // Key is a string
-                this.numeric = false;
+        if (choices === undefined) {
+            this.numeric = false;
+        } else {
+            for (let key of Object.keys(this.choices)) {
+                if (!isNaN(key) && !isNaN(parseFloat(key))) {
+                    // Key is a number
+                } else {
+                    // Key is a string
+                    this.numeric = false;
+                }
             }
         }
 
         const self = this;
         client.on_alive(() => {
+            if (this.choices === undefined) {
+                client.subscribe_unsafe([topic + "-choices"], (key, value) => {
+                    self._on_message(key, value)
+                });
+            }
             client.subscribe_unsafe([topic], (key, value) => {
                 self._on_message(key, value)
             });
@@ -220,7 +229,36 @@ class MisirkaRadio {
         if (this.node === undefined) {
             return;
         }
-        this.node[this.topic].value = value;
+        if (key === this.topic) {
+            this.node[this.topic].value = value;
+        } else {
+            const choices = JSON.parse(value);
+            this.choices = {};
+            for (let i = 0; i < choices.length; i++) {
+                this.choices[choices[i]] = choices[i];
+            }
+
+            for (let key of Object.keys(this.choices)) {
+                let label = document.createElement("label");
+                let radio = document.createElement("input");
+                radio.type = "radio";
+                radio.value = key;
+                radio.name = this.topic;
+                radio.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    let val = key;
+                    if (this.numeric) {
+                        val = parseInt(key, 10);
+                    }
+                    this.client.call_unsafe("set-" + this.topic, {"value": val});
+                });
+                label.appendChild(radio);
+                label.append(this.choices[key]);
+                label.dataset.option = key;
+                label.dataset.topic = this.topic;
+                this.node.appendChild(label);
+            }
+        }
     }
 
     dom() {
@@ -234,25 +272,27 @@ class MisirkaRadio {
         const form = document.createElement("form");
         form.classList.add("button-group");
 
-        for (let key of Object.keys(this.choices)) {
-            let label = document.createElement("label");
-            let radio = document.createElement("input");
-            radio.type = "radio";
-            radio.value = key;
-            radio.name = this.topic;
-            radio.addEventListener("click", (event) => {
-                event.preventDefault();
-                let val = key;
-                if (this.numeric) {
-                    val = parseInt(key, 10);
-                }
-                this.client.call_unsafe("set-" + this.topic, {"value": val});
-            });
-            label.appendChild(radio);
-            label.append(this.choices[key]);
-            label.dataset.option = key;
-            label.dataset.topic = this.topic;
-            form.appendChild(label);
+        if (this.choices !== undefined) {
+            for (let key of Object.keys(this.choices)) {
+                let label = document.createElement("label");
+                let radio = document.createElement("input");
+                radio.type = "radio";
+                radio.value = key;
+                radio.name = this.topic;
+                radio.addEventListener("click", (event) => {
+                    event.preventDefault();
+                    let val = key;
+                    if (this.numeric) {
+                        val = parseInt(key, 10);
+                    }
+                    this.client.call_unsafe("set-" + this.topic, {"value": val});
+                });
+                label.appendChild(radio);
+                label.append(this.choices[key]);
+                label.dataset.option = key;
+                label.dataset.topic = this.topic;
+                form.appendChild(label);
+            }
         }
         group.appendChild(form);
         this.node = form;
@@ -391,6 +431,16 @@ document.addEventListener("DOMContentLoaded", function () {
         1: "Program",
         2: "Preview",
     }).dom());
+
+    section = document.createElement("section");
+    label = document.createElement("label");
+    label.innerText = "Audio";
+    section.appendChild(label);
+    controls.appendChild(section);
+    section.appendChild(new MisirkaSlider(misirka, "audio-gain-left", "Left gain", fmt`{1f} dB`).dom());
+    section.appendChild(new MisirkaSlider(misirka, "audio-gain-right", "Right gain", fmt`{1f} dB`).dom());
+    section.appendChild(new MisirkaRadio(misirka, "audio-mux-left", "Left source").dom());
+    section.appendChild(new MisirkaRadio(misirka, "audio-mux-right", "Right source").dom());
 
 
     misirka.on_alive(() => {

@@ -46,14 +46,6 @@ class UI:
         self.guides = StateNumber("thirds")
         self.zoom = StateNumber(1.0)
 
-        # Audio state
-        self.audio_gain_left = StateNumber(self.config.audio.left_gain)
-        self.audio_gain_right = StateNumber(self.config.audio.right_gain)
-        self.audio_gain_min = StateNumber(self.cam.audio.get_min_gain())
-        self.audio_gain_max = StateNumber(self.cam.audio.get_max_gain())
-        self.audio_mux_left = StateNumber("XLR1 [DIFF]")
-        self.audio_mux_right = StateNumber("XLR2 [DIFF]")
-
         # HDMI overlay state
         self.hdmi_overlay = StateNumber(False)
 
@@ -274,23 +266,6 @@ class UI:
             sensor = sensor.upper()
         return sensor
 
-    def _set_audio_gain(self, chan, val):
-        self.cam.audio.set_gain(chan, val)
-        if chan == 'L':
-            self.audio_gain_left.set(val)
-        else:
-            self.audio_gain_right.set(val)
-
-    def _set_audio_mux(self, chan, src):
-        self.cam.audio.set_route(chan, src)
-        if chan == 'L':
-            self.audio_mux_left.set(src)
-            self.config.audio.left_source = src
-        else:
-            self.audio_mux_right.set(src)
-            self.config.audio.right_source = src
-        self.config.save_config()
-
     def _create_settings_layout(self):
         l: Layout = self.screens["settings"]
 
@@ -313,11 +288,10 @@ class UI:
 
         page3 = VBox(name="audio")
         page3.add(
-            Slider("Left gain", self.audio_gain_left, handler=lambda v: self._set_audio_gain('L', v),
-                   min=self.audio_gain_min, max=self.audio_gain_max, text_width=130))
+            ControlSlider("Left gain", self.controls.audio_gain_left, text_width=130))
         page3.add(
-            Slider("Right gain", self.audio_gain_right, handler=lambda v: self._set_audio_gain('R', v),
-                   min=self.audio_gain_min, max=self.audio_gain_max, text_width=130))
+            ControlSlider("Right gain", self.controls.audio_gain_right, text_width=130))
+
 
         left_opts = {}
         for item in self.cam.audio.get_routes('L'):
@@ -326,11 +300,11 @@ class UI:
         for item in self.cam.audio.get_routes('R'):
             right_opts[item] = item
 
-        page3.add(RadioRow("Left src", self.audio_mux_left, options=left_opts,
-                           handler=lambda v: self._set_audio_mux('L', v),
+        page3.add(RadioRow("Left src", self.controls.audio_mux_left.value, options=left_opts,
+                           handler=lambda v: self.controls.audio_mux_left.set(v),
                            text_width=130))
-        page3.add(RadioRow("Right src", self.audio_mux_right, options=right_opts,
-                           handler=lambda v: self._set_audio_mux('R', v),
+        page3.add(RadioRow("Right src", self.controls.audio_mux_right.value, options=right_opts,
+                           handler=lambda v: self.controls.audio_mux_right.set(v),
                            text_width=130))
 
         l.add_widget(Layout.MIDDLE, page3)

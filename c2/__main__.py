@@ -230,6 +230,37 @@ class Camera:
         self.controls.ae_metering.set_handler(lambda v: self.set_ae_metering(v))
         self.controls.ae_metering.help = "Auto-exposure metering mode sets the spatial weights for measuring the current brightness"
 
+        self.controls.add(StateControl("audio-ready", self.audio.audio_enabled, readonly=True), key="audio_ready")
+        self.controls.add(StateControl("audio-gain-left", self.config.audio.left_gain, self.audio.get_min_gain(),
+                                       self.audio.get_max_gain()), key="audio_gain_left")
+        self.controls.add(StateControl("audio-gain-right", self.config.audio.right_gain, self.audio.get_min_gain(),
+                                       self.audio.get_max_gain()), key="audio_gain_right")
+        self.controls.audio_gain_left.set_handler(lambda v: self.set_audio_gain('L', v))
+        self.controls.audio_gain_right.set_handler(lambda v: self.set_audio_gain('R', v))
+        self.controls.add(StateControl("audio-mux-left", "No Select", choices=self.audio.get_routes('L')),
+                          key="audio_mux_left")
+        self.controls.add(StateControl("audio-mux-right", "No Select", choices=self.audio.get_routes('R')),
+                          key="audio_mux_right")
+        self.controls.audio_mux_left.set_handler(lambda v: self.set_audio_mux('L', v))
+        self.controls.audio_mux_right.set_handler(lambda v: self.set_audio_mux('R', v))
+
+    def set_audio_gain(self, chan, val):
+        self.audio.set_gain(chan, val)
+        if chan == 'L':
+            self.controls.audio_gain_left.set(val, front=False)
+        else:
+            self.controls.audio_gain_right.set(val, front=False)
+
+    def set_audio_mux(self, chan, src):
+        self.audio.set_route(chan, src)
+        if chan == 'L':
+            self.controls.audio_mux_left.set(src, front=False)
+            self.config.audio.left_source = src
+        else:
+            self.controls.audio_mux_right.set(src, front=False)
+            self.config.audio.right_source = src
+        self.config.save_config()
+
     def set_sharpness(self, val):
         self.controls.sharpness.set(val, front=False)
         self.cam.set_controls({"Sharpness": val})
@@ -377,7 +408,7 @@ class Camera:
 
             with open("/sys/class/thermal/thermal_zone0/temp", "r") as handle:
                 temp = int(handle.read().strip())
-            self.controls.coretemp.set(temp/1000, front=False)
+            self.controls.coretemp.set(temp / 1000, front=False)
         self.debounce += 1
         time.sleep(max(1.0 / 30 - (time.time() - start), 0))
 
