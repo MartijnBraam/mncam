@@ -1,0 +1,150 @@
+(footprint "mta100_01x3_P2.54_640455-3"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "MTA-100 polarized headers, right angle, 3 positions. Part code 640455-3")
+	(tags "MTA-100 2.54mm header single row polarized")
+	(property "Reference" ""
+		(at 0 0 0)
+		(layer "F.SilkS")
+		(uuid "3baff2b0-0c6e-474d-b592-e63713455653")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Value" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(uuid "ac494233-c28b-492c-8259-24bb93e789f3")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "4700a9e2-6d25-45d2-bc78-1a924ab3739d")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ff89b24b-51d8-40a1-8b8a-aff8c8bf3fce")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(zone_connect 0)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_rect
+		(start 0 2.885)
+		(end 5.08 4.795)
+		(stroke
+			(width 0.2)
+			(type default)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+		(uuid "7f8fcd25-033c-46c3-b75e-dbd7af2eb71c")
+	)
+	(fp_rect
+		(start -1.77 1.215)
+		(end 6.85 10.47)
+		(stroke
+			(width 0.05)
+			(type default)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "b9ff6771-f6f4-4aeb-9bf4-129f049ee49f")
+	)
+	(fp_line
+		(start -1.27 2.985)
+		(end 5.35 2.985)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "ac61949b-f450-4180-955d-25d4dc776fe5")
+	)
+	(fp_line
+		(start -1.27 9.335)
+		(end -1.27 2.985)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "8671f251-0170-45da-bf89-3cd0d56a88d3")
+	)
+	(fp_line
+		(start 5.35 2.985)
+		(end 6.35 3.985)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "afb45c7e-f7d6-4311-b798-3d5f70aa8b89")
+	)
+	(fp_line
+		(start 6.35 3.985)
+		(end 6.35 9.335)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "74391a02-7148-4c0e-befb-956b8f91dae9")
+	)
+	(fp_line
+		(start 6.35 9.335)
+		(end -1.27 9.335)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.Fab")
+		(uuid "05412951-e2ee-4068-9d20-21f9a695f9af")
+	)
+	(pad "1" thru_hole circle
+		(at 5.08 0)
+		(size 1.85 1.85)
+		(drill 1.1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "846dbb53-5ad7-4e37-b653-d08e44cdef47")
+	)
+	(pad "2" thru_hole circle
+		(at 2.54 0)
+		(size 1.85 1.85)
+		(drill 1.1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "cc9d5885-1011-4a03-998b-7387e4d04652")
+	)
+	(pad "3" thru_hole circle
+		(at 0 0)
+		(size 1.85 1.85)
+		(drill 1.1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "98e45171-e386-476d-ac2b-fc39f46d4945")
+	)
+	(embedded_fonts no)
+)

@@ -1,0 +1,154 @@
+(footprint "Waveshare5inch"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 -0.5 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "29b6bc25-8c7a-4d0b-9933-e0defc285a24")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "Waveshare 5inch-DSI-LCD-C"
+		(at 0 1 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "94a44ad4-5913-4ff2-99cb-2f261eaf5b9e")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" "https://files.waveshare.com/wiki/5inch%20DSI%20LCD%20(C)/5inch-DSI-LCD-C.pdf"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "247c918b-c72d-432b-be5b-42573eab680c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "Wavehare 5\" DSI display 1024x600"
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ce937426-0764-40ca-ad16-3654d64fd1a6")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_line
+		(start -56.5 -34)
+		(end -56.5 34)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "User.3")
+		(uuid "9b9bc254-d0e1-42b0-864a-1ad53dec6bd3")
+	)
+	(fp_rect
+		(start -60.5 -38)
+		(end 60.5 38)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "User.4")
+		(uuid "51a753a8-f913-4fc7-b8d8-297a6164cc79")
+	)
+	(fp_rect
+		(start -58.5 -14)
+		(end -54.5 8)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "User.4")
+		(uuid "bc5a6d46-0ddf-416c-a51c-51ff9454df8a")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 0 2.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "64018959-75f1-474d-9820-39fe0a116873")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text user "Contact side"
+		(at -53 2 90)
+		(unlocked yes)
+		(layer "User.4")
+		(uuid "56d78e51-7800-4e8d-92ce-401f5bea00c3")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+			(justify left bottom)
+		)
+	)
+	(pad "" np_thru_hole circle
+		(at -56.5 -34)
+		(size 2.7 2.7)
+		(drill 2.7)
+		(layers "F&B.Cu" "*.Mask")
+		(uuid "a783edc8-6fbf-4603-a09f-bd483452a22b")
+	)
+	(pad "" np_thru_hole circle
+		(at -56.5 34)
+		(size 2.7 2.7)
+		(drill 2.7)
+		(layers "F&B.Cu" "*.Mask")
+		(uuid "71001c75-f36c-4f49-9ee4-522af7a630a8")
+	)
+	(pad "" np_thru_hole circle
+		(at 56.5 -34)
+		(size 2.7 2.7)
+		(drill 2.7)
+		(layers "F&B.Cu" "*.Mask")
+		(uuid "7bde30ea-b6e6-48c0-a118-772be0c2a387")
+	)
+	(pad "" np_thru_hole circle
+		(at 56.5 34)
+		(size 2.7 2.7)
+		(drill 2.7)
+		(layers "F&B.Cu" "*.Mask")
+		(uuid "2e6cdc98-5503-4633-8325-2ba7092a3e02")
+	)
+	(embedded_fonts no)
+	(model "C:/Users/Martijn Braam/Downloads/5inch-DSI-LCD-C(2).stp"
+		(offset
+			(xyz 0 2 12.5)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -0 -0 -0)
+		)
+	)
+)
